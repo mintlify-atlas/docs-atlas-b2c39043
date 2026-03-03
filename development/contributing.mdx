@@ -1,0 +1,769 @@
+---
+title: Contributing Guide
+description: How to contribute to Rode and help make it better
+---
+
+Welcome! We're excited that you're interested in contributing to Rode. This guide will help you get started.
+
+## Getting Started
+
+<Steps>
+  <Step title="Fork the repository">
+    Fork [kashsuks/rode](https://github.com/kashsuks/rode) to your GitHub account
+  </Step>
+  
+  <Step title="Clone your fork">
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/rode
+    cd rode
+    ```
+  </Step>
+  
+  <Step title="Set up development environment">
+    Follow the [Building from Source](/development/building) guide to set up your environment
+  </Step>
+  
+  <Step title="Create a feature branch">
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+  </Step>
+</Steps>
+
+## Development Setup
+
+### Prerequisites
+
+Ensure you have:
+
+<CardGroup cols={2}>
+  <Card title="Rust Toolchain" icon="rust">
+    Rust 2021 edition or later
+    
+    ```bash
+    rustup update stable
+    ```
+  </Card>
+  
+  <Card title="Code Editor" icon="code">
+    Any editor with Rust support
+    
+    Recommended: VS Code with rust-analyzer
+  </Card>
+  
+  <Card title="Git" icon="code-branch">
+    Version control system
+    
+    ```bash
+    git --version
+    ```
+  </Card>
+  
+  <Card title="Cargo Tools" icon="wrench">
+    Helpful cargo extensions
+    
+    ```bash
+    cargo install cargo-watch
+    cargo install cargo-edit
+    ```
+  </Card>
+</CardGroup>
+
+### Running in Development Mode
+
+Use `cargo watch` for automatic rebuilds during development:
+
+```bash
+cargo watch -x run
+```
+
+This will automatically recompile and restart Rode whenever you save changes.
+
+## Code Style
+
+### Formatting
+
+Rode uses standard Rust formatting. Before committing:
+
+```bash
+cargo fmt
+```
+
+<Tip>
+Set up your editor to run `cargo fmt` on save for automatic formatting.
+</Tip>
+
+### Linting
+
+Run Clippy to catch common mistakes and improve code quality:
+
+```bash
+cargo clippy -- -D warnings
+```
+
+This treats all warnings as errors to maintain high code quality.
+
+### Code Organization
+
+Follow these conventions:
+
+<AccordionGroup>
+  <Accordion title="Module Structure">
+    - Keep modules focused on a single responsibility
+    - Use `mod.rs` for module organization
+    - Export public APIs through module re-exports
+    
+    **Example**:
+    ```rust
+    // src/autocomplete/mod.rs
+    pub mod context;
+    pub mod engine;
+    pub mod language;
+    pub mod scoring;
+    pub mod types;
+    ```
+  </Accordion>
+  
+  <Accordion title="Naming Conventions">
+    - Use `snake_case` for functions, variables, modules
+    - Use `PascalCase` for types, structs, enums
+    - Use `SCREAMING_SNAKE_CASE` for constants
+    
+    ```rust
+    const SIDEBAR_DEFAULT_WIDTH: f32 = 180.0;
+    
+    pub struct FileTree {
+        pub root: PathBuf,
+    }
+    
+    fn scan_directory(path: &Path) -> Vec<FileEntry> {
+        // ...
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Documentation">
+    Add doc comments for public APIs:
+    
+    ```rust
+    /// Scan a directory and return a list of FileEntry.
+    /// 
+    /// This function recursively scans the given path and builds
+    /// a vector of file entries, skipping ignored directories.
+    fn scan_directory(path: &Path) -> Vec<FileEntry> {
+        // ...
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Error Handling">
+    - Use `Result<T, E>` for operations that can fail
+    - Avoid `.unwrap()` in production code
+    - Use `.unwrap_or_else()` or `match` for graceful handling
+    
+    ```rust
+    // Good
+    let content = std::fs::read_to_string(&path)
+        .unwrap_or_else(|_| String::from("Could not read file"));
+    
+    // Avoid
+    let content = std::fs::read_to_string(&path).unwrap();
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Making Changes
+
+### Understanding the Codebase
+
+Before making changes, familiarize yourself with:
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Read the architecture documentation
+  </Card>
+  
+  <Card title="Message Flow" icon="arrow-right-arrow-left">
+    Understand Iced's message-driven architecture in `src/app.rs`
+  </Card>
+  
+  <Card title="Module Layout" icon="folder-tree">
+    Browse the module organization in `src/`
+  </Card>
+  
+  <Card title="Dependencies" icon="box">
+    Check `Cargo.toml` for the libraries Rode uses
+  </Card>
+</CardGroup>
+
+### Types of Contributions
+
+<Tabs>
+  <Tab title="Bug Fixes">
+    #### Fixing Bugs
+    
+    <Steps>
+      <Step title="Identify the issue">
+        - Reproduce the bug consistently
+        - Check existing issues on GitHub
+        - Create an issue if one doesn't exist
+      </Step>
+      
+      <Step title="Locate the code">
+        - Use the [architecture guide](/development/architecture) to find relevant modules
+        - Use `cargo clippy` to identify potential issues
+        - Add debug logging if needed
+      </Step>
+      
+      <Step title="Fix and test">
+        - Make minimal changes to fix the issue
+        - Test thoroughly in both debug and release builds
+        - Ensure no regressions in other features
+      </Step>
+      
+      <Step title="Document the fix">
+        - Add comments explaining non-obvious fixes
+        - Update documentation if behavior changes
+        - Reference the issue in your commit message
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="New Features">
+    #### Adding Features
+    
+    <Steps>
+      <Step title="Discuss first">
+        Open an issue to discuss the feature before implementing:
+        - Describe the use case
+        - Explain the proposed solution
+        - Get feedback from maintainers
+      </Step>
+      
+      <Step title="Design the feature">
+        - Determine which modules will be affected
+        - Design the message flow for user interactions
+        - Consider state management needs
+      </Step>
+      
+      <Step title="Implement incrementally">
+        - Start with core functionality
+        - Add UI components
+        - Integrate with existing features
+        - Test at each stage
+      </Step>
+      
+      <Step title="Add keyboard shortcuts">
+        If applicable, add shortcuts in `app.rs:990` subscription handler
+      </Step>
+    </Steps>
+    
+    **Example: Adding a new command**
+    
+    <CodeGroup>
+    ```rust src/message.rs
+    // Add message variant
+    pub enum Message {
+        // ...
+        MyNewCommand,
+    }
+    ```
+    
+    ```rust src/app.rs
+    // Handle in update()
+    fn update(&mut self, message: Message) -> Task<Message> {
+        match message {
+            // ...
+            Message::MyNewCommand => {
+                // Implementation
+                Task::none()
+            }
+        }
+    }
+    ```
+    
+    ```rust src/command_palette.rs
+    // Register in command palette
+    commands.push(Command {
+        name: "My New Command".to_string(),
+        // ...
+    });
+    ```
+    </CodeGroup>
+  </Tab>
+  
+  <Tab title="UI Improvements">
+    #### Improving UI/UX
+    
+    UI changes should:
+    
+    <Check>Maintain consistency with existing design</Check>
+    <Check>Work with all built-in themes</Check>
+    <Check>Be responsive to window resizing</Check>
+    <Check>Follow Iced widget patterns</Check>
+    
+    **Key files for UI work**:
+    
+    - `src/ui/styles.rs` - Widget styling functions
+    - `src/ui/editor.rs` - Editor widget creation
+    - `src/ui/sidebar.rs` - Sidebar rendering
+    - `src/theme.rs` - Color themes and constants
+    - `src/app.rs` - View composition in `view()` method
+  </Tab>
+  
+  <Tab title="Documentation">
+    #### Documentation Contributions
+    
+    Documentation improvements are always welcome:
+    
+    <CardGroup cols={2}>
+      <Card title="Code Comments" icon="comment">
+        Add explanatory comments to complex logic
+      </Card>
+      
+      <Card title="Doc Comments" icon="book">
+        Write rustdoc comments for public APIs
+      </Card>
+      
+      <Card title="README Updates" icon="file">
+        Improve the main README.md
+      </Card>
+      
+      <Card title="Examples" icon="code">
+        Add usage examples for features
+      </Card>
+    </CardGroup>
+    
+    <Note>
+    When updating documentation, make sure examples are tested and accurate.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Testing
+
+### Running Tests
+
+Rode includes tests in the `tests/` directory:
+
+```bash
+# Run all tests
+cargo test
+
+# Run specific test
+cargo test test_name
+
+# Run with output
+cargo test -- --nocapture
+```
+
+### Writing Tests
+
+When adding new features, include tests:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_file_tree_toggle() {
+        let mut tree = FileTree::new(PathBuf::from("/test"));
+        let path = PathBuf::from("/test/folder");
+        
+        assert!(!tree.is_expanded(&path));
+        tree.toggle_folder(&path);
+        assert!(tree.is_expanded(&path));
+    }
+}
+```
+
+### Manual Testing
+
+Test your changes manually:
+
+<Checklist>
+  <Check>Test in both debug and release builds</Check>
+  <Check>Test with different file types</Check>
+  <Check>Test with large files/folders</Check>
+  <Check>Test all keyboard shortcuts</Check>
+  <Check>Test with different themes</Check>
+  <Check>Test window resizing and responsiveness</Check>
+  <Check>Test edge cases (empty files, special characters, etc.)</Check>
+</Checklist>
+
+## Commit Guidelines
+
+### Commit Messages
+
+Use clear, descriptive commit messages:
+
+```bash
+# Good
+git commit -m "Fix file tree not refreshing after folder delete"
+git commit -m "Add fuzzy matching to command palette"
+git commit -m "Update theme colors for better contrast"
+
+# Avoid
+git commit -m "fix bug"
+git commit -m "updates"
+git commit -m "wip"
+```
+
+### Commit Message Format
+
+Follow this structure:
+
+```
+<type>: <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types**:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+**Example**:
+```
+feat: Add markdown preview support
+
+Implement markdown preview using Iced's markdown widget.
+Previews open in a new tab when Cmd+Shift+V is pressed.
+
+Closes #42
+```
+
+### Commit Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep commits focused">
+    Each commit should address one logical change:
+    
+    ✅ **Good**: Separate commits for different changes
+    ```bash
+    git commit -m "Add fuzzy finder module"
+    git commit -m "Integrate fuzzy finder with UI"
+    git commit -m "Add keyboard shortcuts for fuzzy finder"
+    ```
+    
+    ❌ **Avoid**: Multiple unrelated changes in one commit
+    ```bash
+    git commit -m "Add fuzzy finder and fix sidebar bug and update README"
+    ```
+  </Accordion>
+  
+  <Accordion title="Write meaningful messages">
+    Explain **why** the change was made, not just **what** changed:
+    
+    ✅ **Good**:
+    ```bash
+    git commit -m "Fix sidebar width not persisting across sessions
+    
+    The sidebar width was being reset on startup because preferences
+    were loaded after the default state was initialized. Load preferences
+    first to ensure the saved width is applied."
+    ```
+    
+    ❌ **Avoid**:
+    ```bash
+    git commit -m "Change initialization order"
+    ```
+  </Accordion>
+  
+  <Accordion title="Reference issues">
+    Link commits to related issues:
+    
+    ```bash
+    git commit -m "Fix memory leak in file watcher
+    
+    The file watcher was not properly cleaning up resources when
+    switching folders, causing memory usage to grow over time.
+    
+    Fixes #123"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Pull Request Process
+
+### Before Submitting
+
+<Checklist>
+  <Check>Code is formatted with `cargo fmt`</Check>
+  <Check>No warnings from `cargo clippy`</Check>
+  <Check>All tests pass with `cargo test`</Check>
+  <Check>Changes are tested manually</Check>
+  <Check>Documentation is updated if needed</Check>
+  <Check>Commit messages are clear and descriptive</Check>
+</Checklist>
+
+### Creating a Pull Request
+
+<Steps>
+  <Step title="Push your branch">
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+  
+  <Step title="Open a PR on GitHub">
+    Go to the [Rode repository](https://github.com/kashsuks/rode) and click "New Pull Request"
+  </Step>
+  
+  <Step title="Fill out the template">
+    Provide:
+    - **Description**: What does this PR do?
+    - **Motivation**: Why is this change needed?
+    - **Testing**: How did you test this?
+    - **Screenshots**: For UI changes
+    - **Related Issues**: Link to issues this PR addresses
+  </Step>
+  
+  <Step title="Wait for review">
+    Maintainers will review your PR and provide feedback
+  </Step>
+</Steps>
+
+### PR Template Example
+
+```markdown
+## Description
+Adds fuzzy file finding with Cmd+P keyboard shortcut.
+
+## Motivation
+Users need a faster way to navigate large projects without
+manually browsing the file tree.
+
+## Changes
+- Added fuzzy_finder module with file indexing
+- Integrated fuzzy finder overlay in main view
+- Added Cmd+P keyboard shortcut
+- Added file preview when navigating results
+
+## Testing
+- [x] Tested with small projects (<100 files)
+- [x] Tested with large projects (>1000 files)
+- [x] Tested fuzzy matching algorithm accuracy
+- [x] Tested keyboard navigation
+- [x] Tested file preview loading
+
+## Screenshots
+[Screenshot of fuzzy finder overlay]
+
+## Related Issues
+Closes #45
+```
+
+### After Submission
+
+<AccordionGroup>
+  <Accordion title="Respond to feedback">
+    - Address review comments promptly
+    - Ask questions if feedback is unclear
+    - Push additional commits to the same branch
+    - Be open to suggestions and alternative approaches
+  </Accordion>
+  
+  <Accordion title="Keep your branch updated">
+    If the main branch changes while your PR is open:
+    
+    ```bash
+    git checkout main
+    git pull upstream main
+    git checkout feature/your-feature
+    git rebase main
+    git push --force-with-lease
+    ```
+  </Accordion>
+  
+  <Accordion title="Be patient">
+    Rode is maintained by a solo developer with limited time.
+    
+    <Note>
+    Reviews may take time. Don't be discouraged if you don't get immediate feedback.
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+## Code Review
+
+### What Reviewers Look For
+
+<CardGroup cols={2}>
+  <Card title="Correctness" icon="check">
+    Does the code work as intended? Are there edge cases?
+  </Card>
+  
+  <Card title="Code Quality" icon="star">
+    Is the code clean, readable, and idiomatic Rust?
+  </Card>
+  
+  <Card title="Performance" icon="gauge">
+    Are there performance implications? Can it be optimized?
+  </Card>
+  
+  <Card title="Maintainability" icon="screwdriver-wrench">
+    Is the code easy to understand and modify in the future?
+  </Card>
+</CardGroup>
+
+### Addressing Review Comments
+
+When reviewers request changes:
+
+<Steps>
+  <Step title="Understand the feedback">
+    Read the comment carefully. Ask for clarification if needed.
+  </Step>
+  
+  <Step title="Make the changes">
+    Update your code based on the feedback.
+  </Step>
+  
+  <Step title="Commit and push">
+    ```bash
+    git add .
+    git commit -m "Address review feedback: improve error handling"
+    git push
+    ```
+  </Step>
+  
+  <Step title="Reply to comments">
+    Let reviewers know you've addressed their feedback or explain why you took a different approach.
+  </Step>
+</Steps>
+
+## Community Guidelines
+
+### Be Respectful
+
+<Check>Be kind and constructive in discussions</Check>
+<Check>Welcome newcomers and help them get started</Check>
+<Check>Accept that there may be different valid approaches</Check>
+<Check>Focus on the code, not the person</Check>
+
+### Communication
+
+<Tabs>
+  <Tab title="GitHub Issues">
+    Use issues for:
+    - Bug reports
+    - Feature requests
+    - Questions about the codebase
+    - Discussion of proposed changes
+  </Tab>
+  
+  <Tab title="Pull Requests">
+    Use PRs for:
+    - Code contributions
+    - Documentation improvements
+    - Discussion of specific implementations
+  </Tab>
+</Tabs>
+
+## Development Tips
+
+<AccordionGroup>
+  <Accordion title="Debugging">
+    Use Rust's built-in debugging:
+    
+    ```rust
+    // Add debug output
+    dbg!(&variable);
+    
+    // Print to console
+    eprintln!("Debug: {:?}", value);
+    
+    // Use debugger
+    // Set breakpoints in your IDE/debugger
+    ```
+  </Accordion>
+  
+  <Accordion title="Performance Profiling">
+    Profile your changes if they affect performance:
+    
+    ```bash
+    # Build with debug info
+    cargo build --release --profile release-with-debug
+    
+    # Use a profiler (e.g., cargo-flamegraph)
+    cargo install flamegraph
+    cargo flamegraph
+    ```
+  </Accordion>
+  
+  <Accordion title="Understanding Iced">
+    Rode uses the Iced GUI framework. Helpful resources:
+    
+    - [Iced documentation](https://docs.rs/iced)
+    - [Iced examples](https://github.com/iced-rs/iced/tree/master/examples)
+    - [Iced book](https://book.iced.rs/)
+  </Accordion>
+  
+  <Accordion title="Incremental Development">
+    Work in small, testable increments:
+    
+    1. Write the minimal code to test your idea
+    2. Test it works
+    3. Refactor and improve
+    4. Add error handling
+    5. Add documentation
+    6. Test edge cases
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github">
+    Ask questions by opening an issue
+  </Card>
+  
+  <Card title="Architecture Docs" icon="book" href="/development/architecture">
+    Review the architecture documentation
+  </Card>
+  
+  <Card title="Source Code" icon="code">
+    Read the well-commented source code
+  </Card>
+  
+  <Card title="Rust Docs" icon="rust">
+    Check the official Rust documentation
+  </Card>
+</CardGroup>
+
+## Recognition
+
+All contributors are recognized in:
+
+- The [GitHub contributors list](https://github.com/kashsuks/Rode/graphs/contributors)
+- Release notes for significant contributions
+- The project README
+
+<Note>
+Your contributions make Rode better for everyone. Thank you for taking the time to contribute!
+</Note>
+
+## License
+
+By contributing to Rode, you agree that your contributions will be licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Deep dive into Rode's architecture
+  </Card>
+  
+  <Card title="Building" icon="hammer" href="/development/building">
+    Set up your development environment
+  </Card>
+</CardGroup>

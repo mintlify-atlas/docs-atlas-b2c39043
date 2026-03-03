@@ -1,80 +1,278 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get started with Rode in minutes
+icon: 'rocket'
 ---
 
-## Get started in three steps
+Get up and running with Rode quickly. This guide walks you through opening your first project and using essential features.
 
-Get your documentation site running locally and make your first customization.
+## Opening a project
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Launch Rode">
+    Start the editor by running:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```bash
+    rode-editor
+    ```
+  </Step>
+  
+  <Step title="Open a folder">
+    Use one of these methods:
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    - Press `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P` (Linux/Windows) to open the Command Palette
+    - Type "Open Folder" and press Enter
+    - Select your project directory in the file picker
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    Or use the keyboard shortcut directly:
+    
+    - Press `Cmd+O` (macOS) or `Ctrl+O` (Linux/Windows)
+  </Step>
+  
+  <Step title="Navigate the file tree">
+    Your project files appear in the left sidebar. Click any file to open it in a new tab.
+    
+    Toggle the sidebar visibility with `Cmd+B` (macOS) or `Ctrl+B` (Linux/Windows).
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Essential keyboard shortcuts
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+Rode supports many keyboard shortcuts for efficient editing:
 
-### Step 3: Go live
+| Action | macOS | Linux/Windows |
+|--------|-------|---------------|
+| **File operations** |
+| Open file | `Cmd+O` | `Ctrl+O` |
+| Save file | `Cmd+S` | `Ctrl+S` |
+| New file | `Cmd+N` | `Ctrl+N` |
+| Close tab | `Cmd+W` | `Ctrl+W` |
+| **Navigation** |
+| Toggle sidebar | `Cmd+B` | `Ctrl+B` |
+| File finder | `Cmd+T` | `Ctrl+T` |
+| Fuzzy finder | `Cmd+Shift+F` | `Ctrl+Shift+F` |
+| Command Palette | `Cmd+Shift+P` | `Ctrl+Shift+P` |
+| **Search** |
+| Find and replace | `Cmd+F` | `Ctrl+F` |
+| **Tools** |
+| Toggle terminal | `Cmd+J` | `Ctrl+J` |
+| Settings | `Cmd+Shift+S` | `Ctrl+Shift+S` |
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+<Tip>
+See the complete [keyboard shortcuts reference](/configuration/keybindings) for all available keybindings.
+</Tip>
+
+## Using the fuzzy finder
+
+The fuzzy finder helps you quickly locate files in your project:
+
+<Steps>
+  <Step title="Open fuzzy finder">
+    Press `Cmd+Shift+F` (macOS) or `Ctrl+Shift+F` (Linux/Windows)
+  </Step>
+  
+  <Step title="Start typing">
+    Type part of the filename you're looking for. The fuzzy matcher scores results based on:
+    
+    - Exact character matches
+    - Word boundary matches (bonus points)
+    - Consecutive character matches (bonus points)
+    - Path proximity to current file
+  </Step>
+  
+  <Step title="Navigate results">
+    Use arrow keys to move through matches, then press `Enter` to open the file.
+  </Step>
+</Steps>
+
+<Info>
+The fuzzy finder includes a preview pane showing the file contents before you open it.
+</Info>
+
+## Using the Command Palette
+
+Access all commands through the Command Palette:
+
+1. Press `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P` (Linux/Windows)
+2. Type to filter available commands
+3. Select a command with arrow keys and `Enter`
+
+Available commands:
+- Theme
+- Settings
+- Open File / Open Folder
+- Save File / Save As
+- New File
+- Toggle Terminal
+- Find and Replace
+- Quit
+
+## Working with tabs
+
+Rode supports multiple open files with a tab-based interface:
+
+- Click the `×` button on a tab to close it
+- Modified files show a dot indicator on their tab
+- Press `Cmd+W` or `Ctrl+W` to close the current tab
+
+## Find and replace
+
+<Steps>
+  <Step title="Open find and replace">
+    Press `Cmd+F` (macOS) or `Ctrl+F` (Linux/Windows)
+  </Step>
+  
+  <Step title="Enter search query">
+    Type your search term in the top field. Results update in real-time.
+  </Step>
+  
+  <Step title="Navigate matches">
+    - Press `Enter` or click "Next" to jump to the next match
+    - Click "Previous" to go back
+    - Toggle case sensitivity with the "Aa" button
+  </Step>
+  
+  <Step title="Replace text">
+    Enter replacement text in the "Replace with" field, then:
+    
+    - Click "Replace" to replace the current match
+    - Click "Replace All" to replace all matches
+  </Step>
+</Steps>
+
+## Syntax highlighting
+
+Rode provides syntax highlighting for multiple languages using tree-sitter:
+
+<CodeGroup>
+```rust Rust
+fn main() {
+    println!("Hello from Rode!");
+}
+```
+
+```javascript JavaScript
+function main() {
+  console.log("Hello from Rode!");
+}
+```
+
+```python Python
+def main():
+    print("Hello from Rode!")
+```
+
+```typescript TypeScript
+function main(): void {
+  console.log("Hello from Rode!");
+}
+```
+</CodeGroup>
+
+Supported languages include Rust, JavaScript, TypeScript, and Python with accurate syntax highlighting powered by tree-sitter parsers.
+
+## Customizing your editor
+
+### Changing preferences
+
+Configure editor behavior in `~/.config/rode/preferences.lua`:
+
+```lua
+return {
+    tab_size = 4,
+    use_spaces = true,
+    theme_name = "Catppuccin Mocha",
+}
+```
+
+See the [Preferences guide](/configuration/preferences) for all available options.
+
+### Changing themes
+
+Rode comes with several built-in themes:
+
+- Catppuccin Mocha (default)
+- Gruvbox Dark
+- GitHub Dark
+- Nord
+- TokyoNight
+- Ayu Dark
+
+Change themes through:
+1. Open Settings (`Cmd+Shift+S` or `Ctrl+Shift+S`)
+2. Select a theme from the dropdown
+3. Click "Apply Theme"
+
+Or create your own theme - see the [Themes guide](/configuration/themes).
+
+## Vim mode
+
+Rode includes basic Vim-style command support. Press `:` to open the command input bar, then type:
+
+- `:w` - Save current file
+- `:q` - Quit (close current tab)
+- `:wq` - Save and quit
+- `:e <path>` - Open a file
+- `:new` - Create a new file
+
+<Note>
+Rode's Vim mode is focused on common commands. For full Vim modal editing, use a dedicated Vim editor.
+</Note>
+
+## Terminal integration
+
+Open your system terminal in the current workspace:
+
+1. Press `Cmd+J` (macOS) or `Ctrl+J` (Linux/Windows)
+2. Rode launches your default terminal emulator
+3. The terminal opens in your workspace directory
+
+<Info>
+Rode detects and uses the best available terminal for your platform:
+- **macOS**: iTerm2 → Terminal.app
+- **Linux**: 9 different terminal emulators (gnome-terminal, konsole, etc.)
+- **Windows**: Windows Terminal → PowerShell → CMD
+</Info>
+
+## WakaTime integration
+
+Track your coding time automatically with WakaTime:
+
+<Steps>
+  <Step title="Install WakaTime CLI">
+    Follow the [WakaTime CLI installation guide](https://wakatime.com/cli)
+  </Step>
+  
+  <Step title="Get your API key">
+    Sign up at [wakatime.com](https://wakatime.com) and copy your API key from Settings
+  </Step>
+  
+  <Step title="Configure in Rode">
+    1. Open Settings (`Cmd+Shift+S` or `Ctrl+Shift+S`)
+    2. Navigate to the WakaTime section
+    3. Paste your API key
+    4. Click "Save"
+  </Step>
+</Steps>
+
+See the [WakaTime integration guide](/integrations/wakatime) for more details.
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Explore features" icon="sparkles" href="/features/overview">
+    Discover all of Rode's capabilities
+  </Card>
+  
+  <Card title="Configure Rode" icon="sliders" href="/configuration/preferences">
+    Customize your editing experience
+  </Card>
+  
+  <Card title="Keyboard shortcuts" icon="keyboard" href="/configuration/keybindings">
+    Master all keybindings
+  </Card>
+  
+  <Card title="Build from source" icon="hammer" href="/development/building">
+    Compile Rode yourself
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

@@ -1,0 +1,619 @@
+---
+title: 'Themes'
+description: 'Customize editor colors and syntax highlighting'
+icon: 'palette'
+---
+
+## Overview
+
+Rode supports both built-in themes and custom color schemes. Themes control the editor's color palette, including background colors, text colors, syntax highlighting, and UI elements.
+
+## Built-in Themes
+
+Rode includes six carefully crafted themes inspired by popular color schemes:
+
+<CardGroup cols={2}>
+  <Card title="Catppuccin Mocha" icon="moon">
+    The default theme. A warm, pastel color palette with excellent contrast.
+    ```lua
+    theme_name = "Catppuccin Mocha"
+    ```
+  </Card>
+  
+  <Card title="Gruvbox Dark" icon="tree">
+    Retro groove color scheme with warm, earthy tones.
+    ```lua
+    theme_name = "Gruvbox Dark"
+    ```
+  </Card>
+  
+  <Card title="GitHub Dark" icon="github">
+    GitHub's dark theme with cool blue accents.
+    ```lua
+    theme_name = "GitHub Dark"
+    ```
+  </Card>
+  
+  <Card title="Nord" icon="snowflake">
+    Arctic, north-bluish color palette.
+    ```lua
+    theme_name = "Nord"
+    ```
+  </Card>
+  
+  <Card title="TokyoNight" icon="city">
+    A dark theme inspired by Tokyo's night skyline.
+    ```lua
+    theme_name = "TokyoNight"
+    ```
+  </Card>
+  
+  <Card title="Ayu Dark" icon="circle-half-stroke">
+    A simple theme with bright colors on a dark background.
+    ```lua
+    theme_name = "Ayu Dark"
+    ```
+  </Card>
+</CardGroup>
+
+**Source:** `src/theme.rs:288-295`
+
+## Custom Themes
+
+You can create a completely custom theme by creating a `theme.lua` file in your configuration directory and setting `theme_name = "Custom (theme.lua)"` in your preferences.
+
+### Theme File Location
+
+```
+~/.config/rode/theme.lua
+```
+
+### Color Palette
+
+Custom themes use the Catppuccin color naming convention with 26 colors:
+
+<CodeGroup>
+```lua Complete Theme Template
+-- Rode Theme Configuration
+-- Edit these hex color values to customize your theme
+
+return {
+    -- Accent Colors (warm to cool)
+    rosewater = "#f5e0dc",
+    flamingo = "#f2cdcd",
+    pink = "#f5c2e7",
+    mauve = "#cba6f7",
+    red = "#f38ba8",
+    maroon = "#eba0ac",
+    peach = "#fab387",
+    yellow = "#f9e2af",
+    green = "#a6e3a1",
+    teal = "#94e2d5",
+    sky = "#89dceb",
+    sapphire = "#74c7ec",
+    blue = "#89b4fa",
+    lavender = "#b4befe",
+    
+    -- Text Hierarchy
+    text = "#cdd6f4",
+    subtext1 = "#bac2de",
+    subtext0 = "#a6adc8",
+    
+    -- Overlay Layers
+    overlay2 = "#9399b2",
+    overlay1 = "#7f849c",
+    overlay0 = "#6c7086",
+    
+    -- Surface Layers
+    surface2 = "#585b70",
+    surface1 = "#45475a",
+    surface0 = "#313244",
+    
+    -- Background Layers
+    base = "#1e1e2e",
+    mantle = "#181825",
+    crust = "#11111b",
+}
+```
+
+```lua Minimal Custom Theme
+return {
+    -- Only define the colors you want to change
+    -- Missing colors will use defaults
+    rosewater = "#dc8a78",
+    pink = "#d699b6",
+    mauve = "#8f3f71",
+    red = "#cc241d",
+    peach = "#d65d0e",
+    yellow = "#d79921",
+    green = "#98971a",
+    blue = "#458588",
+    text = "#ebdbb2",
+    base = "#282828",
+    mantle = "#1d2021",
+    crust = "#181818",
+}
+```
+</CodeGroup>
+
+**Source:** `src/config/theme_manager.rs:69-109`
+
+## Color Mapping
+
+Rode maps the 26-color palette to specific UI elements and syntax highlighting:
+
+### UI Elements
+
+<AccordionGroup>
+  <Accordion title="Background Colors">
+    - `base` → Editor background
+    - `mantle` → Sidebar, status bar, tab bar background
+    - `crust` → Tab bar background
+    - `surface0` → Active tab, drag handle
+    - `surface1` → Hover state
+    - `surface2` → Pressed state
+    
+    **Source:** `src/theme.rs:255-259`
+  </Accordion>
+  
+  <Accordion title="Text Colors">
+    - `text` → Primary text (main content)
+    - `subtext1` → Secondary text
+    - `subtext0` → Muted text
+    - `overlay2` → Dimmed text
+    - `overlay1` → Placeholder text
+    
+    **Source:** `src/theme.rs:260`
+  </Accordion>
+  
+  <Accordion title="Borders & Effects">
+    - `surface1` → Subtle borders
+    - `surface0` → Very subtle borders
+    - `blue` → Selection background (30% opacity)
+    - `crust` → Dark shadow (50% opacity)
+    - `surface2` → Light shadow (8% opacity)
+    
+    **Source:** `src/theme.rs:261-264`
+  </Accordion>
+</AccordionGroup>
+
+### Syntax Highlighting
+
+Colors are mapped to code elements using the syntect highlighting engine:
+
+<Tabs>
+  <Tab title="Keywords & Control">
+    **Color:** `mauve` (purple)
+    
+    **Applies to:**
+    - `keyword`, `keyword.control`
+    - `keyword.operator.logical`
+    - `storage.type`, `storage.modifier`
+    
+    **Examples:** `fn`, `if`, `else`, `return`, `let`, `mut`
+    
+    **Source:** `src/theme.rs:122`
+  </Tab>
+  
+  <Tab title="Functions">
+    **Color:** `blue`
+    
+    **Applies to:**
+    - `entity.name.function`
+    - `support.function`
+    - `meta.function-call`
+    
+    **Examples:** Function names, method calls
+    
+    **Source:** `src/theme.rs:124`
+  </Tab>
+  
+  <Tab title="Types & Classes">
+    **Color:** `yellow`
+    
+    **Applies to:**
+    - `entity.name.type`, `entity.name.class`
+    - `support.type`, `support.class`
+    
+    **Examples:** `String`, `Vec`, `Option`, custom types
+    
+    **Source:** `src/theme.rs:126`
+  </Tab>
+  
+  <Tab title="Strings">
+    **Color:** `green`
+    
+    **Applies to:**
+    - `string`, `string.quoted`
+    - `punctuation.definition.string`
+    
+    **Examples:** `"hello"`, `'world'`, string delimiters
+    
+    **Source:** `src/theme.rs:128`
+  </Tab>
+  
+  <Tab title="Numbers & Constants">
+    **Color:** `peach` (orange)
+    
+    **Applies to:**
+    - `constant.numeric` (numbers)
+    - `constant.language` (booleans: `true`, `false`)
+    - `constant.other`
+    
+    **Source:** `src/theme.rs:130-134`
+  </Tab>
+  
+  <Tab title="Comments">
+    **Color:** `overlay2` (dimmed)
+    
+    **Style:** Italic
+    
+    **Applies to:**
+    - `comment`, `comment.line`, `comment.block`
+    - `punctuation.definition.comment`
+    
+    **Source:** `src/theme.rs:120`
+  </Tab>
+</Tabs>
+
+<Accordion title="Complete Syntax Scope Mapping">
+  ```rust
+  // Comments (overlay2, italic)
+  "comment, comment.line, comment.block, punctuation.definition.comment"
+  
+  // Keywords (mauve/purple)
+  "keyword, keyword.control, keyword.operator.logical, storage.type, storage.modifier"
+  
+  // Functions (blue)
+  "entity.name.function, support.function, meta.function-call"
+  
+  // Types (yellow)
+  "entity.name.type, entity.name.class, support.type, support.class"
+  
+  // Strings (green)
+  "string, string.quoted, punctuation.definition.string"
+  
+  // Numbers (peach/orange)
+  "constant.numeric, constant.numeric.integer, constant.numeric.float"
+  
+  // Booleans (peach/orange, italic)
+  "constant.language, constant.language.boolean"
+  
+  // Variables (text)
+  "variable, variable.other, variable.parameter"
+  
+  // Properties (lavender/soft blue)
+  "variable.other.property, variable.other.member, support.variable.property"
+  
+  // Operators (sky)
+  "keyword.operator, keyword.operator.assignment, punctuation.accessor"
+  
+  // Punctuation (overlay3)
+  "punctuation, punctuation.section, punctuation.separator, meta.brace"
+  
+  // Macros (teal, bold)
+  "entity.name.macro, support.function.macro"
+  
+  // Lifetimes (maroon/dark red, italic)
+  "storage.modifier.lifetime, entity.name.lifetime"
+  
+  // Escape sequences (pink)
+  "constant.character.escape"
+  ```
+  
+  **Source:** `src/theme.rs:118-172`
+</Accordion>
+
+## Theme Structure
+
+Themes are defined in Rust as a `ThemeColors` struct with 26 color fields:
+
+<CodeGroup>
+```rust Theme Definition
+#[derive(Debug, Clone)]
+pub struct ThemeColors {
+    pub rosewater: String,
+    pub flamingo: String,
+    pub pink: String,
+    pub mauve: String,
+    pub red: String,
+    pub maroon: String,
+    pub peach: String,
+    pub yellow: String,
+    pub green: String,
+    pub teal: String,
+    pub sky: String,
+    pub sapphire: String,
+    pub blue: String,
+    pub lavender: String,
+    pub text: String,
+    pub subtext1: String,
+    pub subtext0: String,
+    pub overlay2: String,
+    pub overlay1: String,
+    pub overlay0: String,
+    pub surface2: String,
+    pub surface1: String,
+    pub surface0: String,
+    pub base: String,
+    pub mantle: String,
+    pub crust: String,
+}
+```
+
+```rust Default Values (Catppuccin Mocha)
+impl Default for ThemeColors {
+    fn default() -> Self {
+        Self {
+            rosewater: "#f5e0dc".to_string(),
+            flamingo: "#f2cdcd".to_string(),
+            pink: "#f5c2e7".to_string(),
+            mauve: "#cba6f7".to_string(),
+            red: "#f38ba8".to_string(),
+            maroon: "#eba0ac".to_string(),
+            peach: "#fab387".to_string(),
+            yellow: "#f9e2af".to_string(),
+            green: "#a6e3a1".to_string(),
+            teal: "#94e2d5".to_string(),
+            sky: "#89dceb".to_string(),
+            sapphire: "#74c7ec".to_string(),
+            blue: "#89b4fa".to_string(),
+            lavender: "#b4befe".to_string(),
+            text: "#cdd6f4".to_string(),
+            subtext1: "#bac2de".to_string(),
+            subtext0: "#a6adc8".to_string(),
+            overlay2: "#9399b2".to_string(),
+            overlay1: "#7f849c".to_string(),
+            overlay0: "#6c7086".to_string(),
+            surface2: "#585b70".to_string(),
+            surface1: "#45475a".to_string(),
+            surface0: "#313244".to_string(),
+            base: "#1e1e2e".to_string(),
+            mantle: "#181825".to_string(),
+            crust: "#11111b".to_string(),
+        }
+    }
+}
+```
+</CodeGroup>
+
+**Source:** `src/config/theme_manager.rs:5-66`
+
+## Lua Parser
+
+The theme parser reads Lua files and extracts color values:
+
+```rust
+pub fn from_lua(content: &str) -> Result<Self, String> {
+    let mut theme = Self::default();
+
+    for line in content.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with("--") || line == "return {" || line == "}" {
+            continue;
+        }
+
+        if let Some((key, value)) = line.split_once('=') {
+            let key = key.trim();
+            let value = value
+                .trim()
+                .trim_end_matches(',')
+                .trim_matches('"')
+                .trim_matches('\'')
+                .to_string();
+
+            match key {
+                "rosewater" => theme.rosewater = value,
+                "flamingo" => theme.flamingo = value,
+                // ... (all 26 colors)
+                _ => {}
+            }
+        }
+    }
+
+    Ok(theme)
+}
+```
+
+**Source:** `src/config/theme_manager.rs:111-162`
+
+## Activating Themes
+
+To activate a theme, set the `theme_name` field in your `~/.config/rode/preferences.lua`:
+
+<CodeGroup>
+```lua Built-in Theme
+return {
+    tab_size = 4,
+    use_spaces = true,
+    theme_name = "Nord",
+}
+```
+
+```lua Custom Theme
+return {
+    tab_size = 4,
+    use_spaces = true,
+    theme_name = "Custom (theme.lua)",
+}
+```
+</CodeGroup>
+
+Then restart Rode or reload your configuration.
+
+## Creating a Theme
+
+<Steps>
+  <Step title="Create the theme file">
+    Create `~/.config/rode/theme.lua` with your color palette:
+    
+    ```lua
+    return {
+        base = "#1e1e2e",
+        text = "#cdd6f4",
+        blue = "#89b4fa",
+        -- ... add all 26 colors
+    }
+    ```
+  </Step>
+  
+  <Step title="Update preferences">
+    Set `theme_name = "Custom (theme.lua)"` in `~/.config/rode/preferences.lua`:
+    
+    ```lua
+    return {
+        tab_size = 4,
+        use_spaces = true,
+        theme_name = "Custom (theme.lua)",
+    }
+    ```
+  </Step>
+  
+  <Step title="Restart Rode">
+    Restart the editor to load your custom theme.
+  </Step>
+</Steps>
+
+## Theme Loading Logic
+
+Rode loads themes on startup with this priority:
+
+1. If `theme_name == "Custom (theme.lua)"`, load from `~/.config/rode/theme.lua`
+2. If `theme_name` matches a built-in theme, use that theme
+3. Otherwise, fall back to "Catppuccin Mocha"
+
+<Accordion title="Theme Loading Implementation">
+```rust
+let active_theme_name = {
+    let name = &editor_preferences.theme_name;
+    if name == "Custom (theme.lua)" {
+        use crate::config::theme_manager;
+        let lua_theme = theme_manager::load_theme();
+        let t = crate::theme::ThemeColors::from_lua_theme(&lua_theme);
+        crate::theme::set_theme(t);
+        "Custom (theme.lua)".to_string()
+    } else {
+        let found = crate::theme::BUILTIN_THEMES.iter().find(|&&t| t == name.as_str());
+        if let Some(&theme_name) = found {
+            let t = crate::theme::builtin_theme(theme_name);
+            crate::theme::set_theme(t);
+            theme_name.to_string()
+        } else {
+            "Catppuccin Mocha".to_string()
+        }
+    }
+};
+```
+
+**Source:** `src/app.rs:115-133`
+</Accordion>
+
+## Examples
+
+<AccordionGroup>
+  <Accordion title="Solarized Dark Inspired">
+    ```lua
+    return {
+        -- Base colors
+        base = "#002b36",
+        mantle = "#073642",
+        crust = "#002b36",
+        
+        -- Surface colors
+        surface0 = "#073642",
+        surface1 = "#586e75",
+        surface2 = "#657b83",
+        
+        -- Overlay colors
+        overlay0 = "#839496",
+        overlay1 = "#93a1a1",
+        overlay2 = "#657b83",
+        
+        -- Text colors
+        text = "#839496",
+        subtext0 = "#93a1a1",
+        subtext1 = "#eee8d5",
+        
+        -- Accent colors
+        yellow = "#b58900",
+        orange = "#cb4b16",
+        red = "#dc322f",
+        magenta = "#d33682",
+        violet = "#6c71c4",
+        blue = "#268bd2",
+        cyan = "#2aa198",
+        green = "#859900",
+        
+        -- Additional accents
+        rosewater = "#eee8d5",
+        flamingo = "#fdf6e3",
+        pink = "#d33682",
+        mauve = "#6c71c4",
+        maroon = "#dc322f",
+        peach = "#cb4b16",
+        teal = "#2aa198",
+        sky = "#268bd2",
+        sapphire = "#268bd2",
+        lavender = "#6c71c4",
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="High Contrast">
+    ```lua
+    return {
+        -- Pure black background
+        base = "#000000",
+        mantle = "#0a0a0a",
+        crust = "#000000",
+        
+        -- Dark grays for surfaces
+        surface0 = "#1a1a1a",
+        surface1 = "#2a2a2a",
+        surface2 = "#3a3a3a",
+        
+        -- Medium grays for overlays
+        overlay0 = "#4a4a4a",
+        overlay1 = "#5a5a5a",
+        overlay2 = "#6a6a6a",
+        
+        -- Bright text
+        text = "#ffffff",
+        subtext0 = "#e0e0e0",
+        subtext1 = "#f0f0f0",
+        
+        -- Vivid accent colors
+        red = "#ff4444",
+        orange = "#ff8800",
+        yellow = "#ffff00",
+        green = "#00ff00",
+        blue = "#4444ff",
+        purple = "#ff00ff",
+        
+        -- Mapped accents
+        rosewater = "#ffcccc",
+        flamingo = "#ffaa88",
+        pink = "#ff88ff",
+        mauve = "#cc88ff",
+        maroon = "#ff0044",
+        peach = "#ffaa44",
+        teal = "#00ffcc",
+        sky = "#00ccff",
+        sapphire = "#0088ff",
+        lavender = "#8888ff",
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Preferences" icon="sliders" href="/configuration/preferences">
+    Configure tab size, indentation, and theme selection
+  </Card>
+  
+  <Card title="Keybindings" icon="keyboard" href="/configuration/keybindings">
+    Learn about keyboard shortcuts
+  </Card>
+</CardGroup>

@@ -1,0 +1,247 @@
+---
+title: 'Preferences'
+description: 'Configure editor preferences and behavior'
+icon: 'sliders'
+---
+
+## Overview
+
+Rode stores your editor preferences in a Lua configuration file located at `~/.config/rode/preferences.lua`. This file controls core editor behavior like indentation, tab handling, and theme selection.
+
+## Configuration File
+
+Preferences are configured using a simple Lua table format. The configuration file is automatically created with default values when you first launch Rode.
+
+<CodeGroup>
+```lua Default Configuration
+-- Rode Editor Preferences
+-- Edit these values to customize your editor
+
+return {
+    tab_size = 4,
+    use_spaces = true,
+    theme_name = "default",
+}
+```
+
+```lua Custom Example
+return {
+    tab_size = 2,
+    use_spaces = true,
+    theme_name = "Gruvbox Dark",
+}
+```
+</CodeGroup>
+
+## Available Preferences
+
+### tab_size
+
+<ParamField path="tab_size" type="number" default="4">
+  The number of spaces to use for indentation. This value is clamped between 1 and 16.
+  
+  **Source:** `src/config/preferences.rs:66-68`
+  
+  <Accordion title="Implementation Details">
+    The parser enforces a minimum of 1 and maximum of 16:
+    ```rust
+    "tab_size" => {
+        if let Ok(size) = value.parse::<usize>() {
+            prefs.tab_size = size.max(1).min(16);
+        }
+    }
+    ```
+  </Accordion>
+</ParamField>
+
+### use_spaces
+
+<ParamField path="use_spaces" type="boolean" default="true">
+  When `true`, the editor inserts spaces when you press Tab. When `false`, the editor inserts tab characters (`\t`).
+  
+  **Source:** `src/config/preferences.rs:70-72`
+  
+  The indent unit is calculated based on this setting:
+  ```rust
+  pub fn indent_unit(&self) -> String {
+      if self.use_spaces {
+          " ".repeat(self.tab_size)
+      } else {
+          "\t".to_string()
+      }
+  }
+  ```
+</ParamField>
+
+### theme_name
+
+<ParamField path="theme_name" type="string" default="default">
+  The name of the theme to use. Can be any built-in theme name or `"Custom (theme.lua)"` to load a custom theme from `~/.config/rode/theme.lua`.
+  
+  **Source:** `src/config/preferences.rs:73-75`
+  
+  Available built-in themes:
+  - `"Catppuccin Mocha"` (default)
+  - `"Gruvbox Dark"`
+  - `"GitHub Dark"`
+  - `"Nord"`
+  - `"TokyoNight"`
+  - `"Ayu Dark"`
+  - `"Custom (theme.lua)"`
+  
+  See [Themes](/configuration/themes) for more details on customizing colors.
+</ParamField>
+
+## File Location
+
+The preferences file is located at:
+
+```
+~/.config/rode/preferences.lua
+```
+
+The configuration directory is determined by the `HOME` environment variable:
+
+```rust
+pub fn get_config_dir() -> PathBuf {
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+    PathBuf::from(home).join(".config").join("rode")
+}
+```
+
+**Source:** `src/config/theme_manager.rs:165-168`
+
+## Loading Behavior
+
+Rode automatically loads preferences on startup. If the configuration file doesn't exist, default values are used:
+
+<CodeGroup>
+```rust Loading Logic
+pub fn load_preferences() -> EditorPreferences {
+    let path = get_preferences_path();
+    if let Ok(content) = fs::read_to_string(&path) {
+        parse_preferences(&content)
+    } else {
+        EditorPreferences::default()
+    }
+}
+```
+
+```rust Default Values
+impl Default for EditorPreferences {
+    fn default() -> Self {
+        Self {
+            tab_size: 4,
+            use_spaces: true,
+            theme_name: "default".to_string(),
+        }
+    }
+}
+```
+</CodeGroup>
+
+**Source:** `src/config/preferences.rs:41-48` and `src/config/preferences.rs:13-21`
+
+## Parser Details
+
+The Lua configuration parser is simple and robust:
+
+- Empty lines and lines starting with `--` are treated as comments
+- Lines containing `return {` or `}` are ignored
+- Key-value pairs are parsed as `key = value`
+- Values are automatically trimmed of quotes, commas, and whitespace
+
+<Accordion title="Parser Implementation">
+```rust
+fn parse_preferences(content: &str) -> EditorPreferences {
+    let mut prefs = EditorPreferences::default();
+    for line in content.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with("--") || line == "return {" || line == "}" {
+            continue;
+        }
+        if let Some((key, value)) = line.split_once('=') {
+            let key = key.trim();
+            let value = value
+                .trim()
+                .trim_end_matches(',')
+                .trim_matches('"')
+                .trim_matches('\'');
+            match key {
+                "tab_size" => {
+                    if let Ok(size) = value.parse::<usize>() {
+                        prefs.tab_size = size.max(1).min(16);
+                    }
+                }
+                "use_spaces" => {
+                    prefs.use_spaces = value == "true";
+                }
+                "theme_name" => {
+                    prefs.theme_name = value.to_string();
+                }
+                _ => {}
+            }
+        }
+    }
+    prefs
+}
+```
+
+**Source:** `src/config/preferences.rs:50-81`
+</Accordion>
+
+## Examples
+
+<CardGroup cols={2}>
+  <Card title="Minimal Configuration" icon="minimize">
+    ```lua
+    return {
+        tab_size = 2,
+        use_spaces = true,
+        theme_name = "Nord",
+    }
+    ```
+  </Card>
+  
+  <Card title="Tab-based Indentation" icon="indent">
+    ```lua
+    return {
+        tab_size = 4,
+        use_spaces = false,
+        theme_name = "GitHub Dark",
+    }
+    ```
+  </Card>
+  
+  <Card title="Custom Theme" icon="palette">
+    ```lua
+    return {
+        tab_size = 4,
+        use_spaces = true,
+        theme_name = "Custom (theme.lua)",
+    }
+    ```
+  </Card>
+  
+  <Card title="Wide Indentation" icon="arrows-left-right">
+    ```lua
+    return {
+        tab_size = 8,
+        use_spaces = true,
+        theme_name = "Catppuccin Mocha",
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Themes" icon="palette" href="/configuration/themes">
+    Customize editor colors and syntax highlighting
+  </Card>
+  
+  <Card title="Keybindings" icon="keyboard" href="/configuration/keybindings">
+    Learn about keyboard shortcuts
+  </Card>
+</CardGroup>

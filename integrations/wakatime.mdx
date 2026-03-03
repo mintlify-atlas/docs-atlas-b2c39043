@@ -1,0 +1,190 @@
+---
+title: 'WakaTime Integration'
+description: 'Track your coding activity in Rode with WakaTime'
+---
+
+WakaTime is an automatic time tracking tool for developers. Rode has built-in support for WakaTime, allowing you to track your coding activity without any manual intervention.
+
+## Prerequisites
+
+Before configuring WakaTime in Rode, you need to install the WakaTime CLI:
+
+<Steps>
+  <Step title="Install WakaTime CLI">
+    Follow the [official WakaTime CLI installation guide](https://github.com/wakatime/wakatime-cli#installation) for your operating system.
+    
+    On macOS with Homebrew:
+    ```bash
+    brew install wakatime-cli
+    ```
+    
+    On Linux:
+    ```bash
+    pip install wakatime-cli
+    ```
+  </Step>
+
+  <Step title="Get your API key">
+    Sign up for a free account at [wakatime.com](https://wakatime.com) and get your API key from your [settings page](https://wakatime.com/settings/account).
+  </Step>
+</Steps>
+
+## Configuration
+
+Rode stores WakaTime configuration in a Lua file at `~/.config/rode/wakatime.lua`.
+
+### Using the Settings UI
+
+The easiest way to configure WakaTime is through Rode's settings interface:
+
+<Steps>
+  <Step title="Open Settings">
+    Open Rode and navigate to the settings panel. Look for the **WakaTime** section.
+  </Step>
+
+  <Step title="Enter your API key">
+    Paste your WakaTime API key in the API Key field. The format should be `waka_xxxxx...`.
+  </Step>
+
+  <Step title="Configure API URL (Optional)">
+    By default, Rode uses `https://api.wakatime.com/api/v1`. You can change this if you're using a self-hosted WakaTime instance.
+  </Step>
+
+  <Step title="Save settings">
+    Click **Save WakaTime Settings** to persist your configuration.
+  </Step>
+</Steps>
+
+### Manual Configuration
+
+You can also manually create or edit the configuration file at `~/.config/rode/wakatime.lua`:
+
+```lua ~/.config/rode/wakatime.lua
+return {
+  api_key = "waka_your_api_key_here",
+  api_url = "https://api.wakatime.com/api/v1",
+}
+```
+
+## Configuration Options
+
+<ParamField path="api_key" type="string" required>
+  Your WakaTime API key for authentication. Get this from your [WakaTime settings](https://wakatime.com/settings/account).
+  
+  Format: `waka_xxxxx...`
+</ParamField>
+
+<ParamField path="api_url" type="string" default="https://api.wakatime.com/api/v1">
+  The WakaTime API endpoint URL. Only change this if you're using a self-hosted WakaTime instance.
+</ParamField>
+
+## How It Works
+
+Once configured, Rode automatically sends heartbeats to WakaTime as you code:
+
+### Heartbeat Triggers
+
+Rode sends heartbeats in the following scenarios:
+
+<CardGroup cols={2}>
+  <Card title="Tab Focus" icon="eye">
+    When you switch to a different file tab
+  </Card>
+  <Card title="File Save" icon="floppy-disk">
+    When you save a file (marked as a write event)
+  </Card>
+</CardGroup>
+
+### Rate Limiting
+
+To avoid excessive API calls, Rode implements intelligent rate limiting:
+
+- Heartbeats are sent **at most once every 2 minutes** for the same file
+- Switching to a different file immediately triggers a new heartbeat
+- Save operations always trigger a heartbeat (marked with `--write` flag)
+
+### Implementation Details
+
+The heartbeat implementation can be found in `src/wakatime/client.rs:5`:
+
+```rust
+pub fn send_heartbeat(entity: &str, is_write: bool, cfg: &WakaTimeConfig) -> std::io::Result<()> {
+    if cfg.api_key.trim().is_empty() {
+        return Ok(());
+    }
+
+    let mut cmd = Command::new("wakatime-cli");
+    cmd.arg("--entity").arg(entity);
+    cmd.arg("--plugin").arg("rode/0.1.0");
+    cmd.arg("--key").arg(cfg.api_key.trim());
+
+    if !cfg.api_url.trim().is_empty() {
+        cmd.arg("--api-url").arg(cfg.api_url.trim());
+    }
+
+    if is_write {
+        cmd.arg("--write");
+    }
+
+    cmd.stdout(Stdio::null()).stderr(Stdio::null());
+    let _ = cmd.spawn()?;
+    Ok(())
+}
+```
+
+Key details:
+- The plugin identifier is `rode/0.1.0`
+- File paths are passed as the `--entity` argument
+- Write operations (saves) are flagged with `--write`
+- Heartbeats run asynchronously without blocking the editor
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Activity not appearing on WakaTime dashboard">
+    **Possible causes:**
+    
+    1. **WakaTime CLI not installed** - Verify with `which wakatime-cli`
+    2. **Invalid API key** - Check that your API key is correct in settings
+    3. **API key is empty** - Rode silently skips heartbeats if the API key is empty
+    
+    **Solution:** Ensure `wakatime-cli` is in your PATH and your API key is correctly configured.
+  </Accordion>
+
+  <Accordion title="Using a self-hosted WakaTime instance">
+    If you're running your own WakaTime server:
+    
+    1. Set the `api_url` to your server's API endpoint
+    2. Make sure your API key is from your self-hosted instance
+    3. Verify network connectivity to your server
+  </Accordion>
+
+  <Accordion title="Checking if heartbeats are being sent">
+    Since Rode redirects stdout/stderr to null for heartbeat commands, you can temporarily monitor WakaTime CLI:
+    
+    ```bash
+    # Monitor WakaTime CLI logs (location varies by OS)
+    tail -f ~/.wakatime.log
+    ```
+    
+    You should see entries with `rode/0.1.0` as the plugin identifier.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  If your API key is empty or contains only whitespace, Rode will silently skip sending heartbeats. Make sure to configure your API key before expecting activity tracking.
+</Note>
+
+## Privacy
+
+Rode only sends the following information to WakaTime:
+- File paths of the files you're editing
+- Whether the event was a write operation (save)
+- Timestamp of the activity
+- Plugin identifier (`rode/0.1.0`)
+
+No file contents or other sensitive information is transmitted.
+
+<Warning>
+  File paths are sent to WakaTime servers. If you're working with sensitive projects, consider using WakaTime's [project privacy settings](https://wakatime.com/settings/privacy) or a self-hosted instance.
+</Warning>

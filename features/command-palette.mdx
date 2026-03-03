@@ -1,0 +1,362 @@
+---
+title: Command Palette
+description: Access all editor commands through a searchable, keyboard-driven interface
+---
+
+The Command Palette provides quick access to all of Rode's features through a searchable overlay, inspired by VS Code's command palette.
+
+## Opening the Command Palette
+
+Press `Cmd+Shift+P` to open the command palette overlay.
+
+<Frame>
+  <img src="/images/command-palette.png" alt="Command Palette overlay" />
+</Frame>
+
+The palette appears as a centered overlay with:
+- **Search input** at the top
+- **Filtered commands** listed below with descriptions
+- **Keyboard navigation** support
+
+## Available Commands
+
+Rode's command palette includes all major editor operations:
+
+<CodeGroup>
+```rust src/command_palette.rs (Line 17-60)
+let commands = vec![
+    Command {
+        name: "Theme".to_string(),
+        description: "Open theme settings".to_string(),
+    },
+    Command {
+        name: "Settings".to_string(),
+        description: "Open editor settings".to_string(),
+    },
+    Command {
+        name: "Open File".to_string(),
+        description: "Open an existing file".to_string(),
+    },
+    Command {
+        name: "Open Folder".to_string(),
+        description: "Open a folder in file tree".to_string(),
+    },
+    Command {
+        name: "Save File".to_string(),
+        description: "Save the current file".to_string(),
+    },
+    Command {
+        name: "Quit".to_string(),
+        description: "Exit the editor".to_string(),
+    },
+    Command {
+        name: "New File".to_string(),
+        description: "Create a new file".to_string(),
+    },
+    Command {
+        name: "Save As".to_string(),
+        description: "Save the current file with a new name".to_string(),
+    },
+    Command {
+        name: "Toggle Terminal".to_string(),
+        description: "Open system terminal".to_string(),
+    },
+    Command {
+        name: "Find and Replace".to_string(),
+        description: "Search and replace text in editor".to_string(),
+    },
+];
+```
+</CodeGroup>
+
+### Command Categories
+
+<Tabs>
+  <Tab title="File Operations">
+    - **New File**: Create a new untitled file
+    - **Open File**: Browse and open an existing file
+    - **Open Folder**: Open a folder in the file tree
+    - **Save File**: Save the current file
+    - **Save As**: Save with a new name/location
+  </Tab>
+  
+  <Tab title="Editor Features">
+    - **Find and Replace**: Open find/replace panel
+    - **Toggle Terminal**: Launch system terminal
+    - **Settings**: Open preferences panel
+    - **Theme**: Open theme selector
+  </Tab>
+  
+  <Tab title="Application">
+    - **Quit**: Exit the editor
+  </Tab>
+</Tabs>
+
+## Using the Command Palette
+
+<Steps>
+  <Step title="Open Palette">
+    Press `Cmd+Shift+P` to activate the command palette.
+  </Step>
+  
+  <Step title="Search Commands">
+    Start typing to filter commands by name (case-insensitive).
+  </Step>
+  
+  <Step title="Navigate Results">
+    Use `↑` and `↓` arrow keys to select a command.
+  </Step>
+  
+  <Step title="Execute Command">
+    Press `Enter` to run the selected command, or click it with the mouse.
+  </Step>
+</Steps>
+
+### Search Filtering
+
+The command palette filters in real-time as you type:
+
+<CodeGroup>
+```rust src/command_palette.rs (Line 88-101)
+pub fn filter_commands(&mut self) {
+    let input_lower = self.input.to_lowercase();
+
+    if input_lower.is_empty() {
+        self.filtered_commands = self.commands.clone();
+    } else {
+        self.filtered_commands = self
+            .commands
+            .iter()
+            .filter(|cmd| cmd.name.to_lowercase().contains(&input_lower))
+            .cloned()
+            .collect();
+    }
+}
+```
+</CodeGroup>
+
+**Search behavior:**
+- Case-insensitive matching
+- Substring matching ("file" matches "Open File", "Save File", "New File")
+- Shows all commands when input is empty
+- Instant filtering as you type
+
+### Examples
+
+<AccordionGroup>
+  <Accordion title="Search: 'save'">
+    Returns:
+    - Save File
+    - Save As
+  </Accordion>
+  
+  <Accordion title="Search: 'open'">
+    Returns:
+    - Open File
+    - Open Folder
+    - (Also matches "Open theme settings" via description)
+  </Accordion>
+  
+  <Accordion title="Search: 'term'">
+    Returns:
+    - Toggle Terminal
+  </Accordion>
+  
+  <Accordion title="Search: 'set'">
+    Returns:
+    - Settings
+    - (Also matches "Open theme settings")
+  </Accordion>
+</AccordionGroup>
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+Shift+P` | Open command palette |
+| `↑` | Select previous command |
+| `↓` | Select next command |
+| `Enter` | Execute selected command |
+| `Escape` | Close palette |
+
+<Note>
+  The command palette automatically focuses the search input when opened, so you can start typing immediately.
+</Note>
+
+## Command Structure
+
+Each command has two properties:
+
+<ParamField path="name" type="string">
+  The command's display name (shown in bold)
+</ParamField>
+
+<ParamField path="description" type="string">
+  A brief explanation of what the command does
+</ParamField>
+
+<CodeGroup>
+```rust src/command_palette.rs (Line 4-8)
+#[derive(Clone, Debug)]
+pub struct Command {
+    pub name: String,
+    pub description: String,
+}
+```
+</CodeGroup>
+
+## Integration with Other Features
+
+The command palette integrates seamlessly with other Rode features:
+
+### Vim Command Mode
+
+Vim-style commands (`:w`, `:q`, etc.) are translated to command palette commands:
+
+```rust
+:w → "Save File" → execute_palette_command("Save File")
+```
+
+### Keyboard Shortcuts
+
+Most keyboard shortcuts trigger the same commands as the palette:
+
+- `Cmd+S` = "Save File" command
+- `Cmd+O` = "Open Folder" command
+- `Cmd+N` = "New File" command
+- `Cmd+J` = "Toggle Terminal" command
+
+### Menu Integration
+
+Command names match exactly with menu item labels for consistency.
+
+## Implementation Details
+
+### State Management
+
+<CodeGroup>
+```rust src/command_palette.rs (Line 10-70)
+pub struct CommandPalette {
+    pub open: bool,
+    pub input: String,
+    commands: Vec<Command>,
+    pub filtered_commands: Vec<Command>,
+}
+
+impl Default for CommandPalette {
+    fn default() -> Self {
+        let commands = vec![/* ... */];
+        let filtered = commands.clone();
+
+        Self {
+            open: false,
+            input: String::new(),
+            commands,
+            filtered_commands: filtered,
+        }
+    }
+}
+```
+</CodeGroup>
+
+**State fields:**
+
+- `open`: Controls palette visibility
+- `input`: Current search query
+- `commands`: Master list of all commands (immutable)
+- `filtered_commands`: Subset matching current search
+
+### Toggle Behavior
+
+<CodeGroup>
+```rust src/command_palette.rs (Line 73-86)
+pub fn toggle(&mut self) {
+    self.open = !self.open;
+    if self.open {
+        self.input.clear();
+        self.filtered_commands = self.commands.clone();
+    }
+}
+
+pub fn close(&mut self) {
+    self.open = false;
+    self.input.clear();
+    self.filtered_commands.clear();
+}
+```
+</CodeGroup>
+
+**When opening:**
+- Clears previous search input
+- Resets filtered list to show all commands
+- Focuses the search input field
+
+**When closing:**
+- Hides the overlay
+- Clears search state
+- Empties filtered list
+
+## Extending the Command Palette
+
+To add new commands to the palette:
+
+1. **Define the command** in the `commands` vector (src/command_palette.rs:19-60)
+2. **Handle execution** in `execute_palette_command` (src/app.rs)
+3. **Map keyboard shortcuts** if desired (src/app.rs:1022-1051)
+
+<CodeGroup>
+```rust Example: Adding a New Command
+Command {
+    name: "Format Document".to_string(),
+    description: "Auto-format the current file".to_string(),
+},
+```
+</CodeGroup>
+
+## Design Philosophy
+
+Rode's command palette follows these principles:
+
+<CardGroup cols={2}>
+  <Card title="Discoverability" icon="lightbulb">
+    All features accessible in one place with descriptions
+  </Card>
+  
+  <Card title="Speed" icon="bolt">
+    Instant filtering and keyboard-driven navigation
+  </Card>
+  
+  <Card title="Consistency" icon="check">
+    Command names match throughout the UI (menus, shortcuts, Vim mode)
+  </Card>
+  
+  <Card title="Simplicity" icon="circle">
+    Clear, concise command names and descriptions
+  </Card>
+</CardGroup>
+
+<Tip>
+  The command palette is the fastest way to discover and access features you don't have memorized. Press `Cmd+Shift+P` and explore!
+</Tip>
+
+## Future Enhancements
+
+Planned improvements:
+
+<Steps>
+  <Step title="Fuzzy Matching">
+    Implement intelligent fuzzy matching like the file finder (e.g., "sf" matches "Save File")
+  </Step>
+  
+  <Step title="Recent Commands">
+    Show recently used commands at the top of the list
+  </Step>
+  
+  <Step title="Command History">
+    Remember and suggest previously executed commands
+  </Step>
+  
+  <Step title="Contextual Commands">
+    Show different commands based on current editor state (e.g., Markdown-specific commands when editing .md files)
+  </Step>
+</Steps>

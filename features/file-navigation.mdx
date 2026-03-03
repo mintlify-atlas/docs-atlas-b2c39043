@@ -1,0 +1,290 @@
+---
+title: File Navigation
+description: Navigate your codebase efficiently with Rode's file tree, fuzzy finder, and quick file picker
+---
+
+Rode provides multiple ways to navigate your project files, from traditional file trees to lightning-fast fuzzy finding.
+
+## File Tree Sidebar
+
+The file tree provides a hierarchical view of your project structure.
+
+### Opening a Folder
+
+<Steps>
+  <Step title="Open Folder Dialog">
+    Press `Cmd+O` or select "Open Folder" from the Command Palette to browse for a directory.
+  </Step>
+  <Step title="Navigate the Tree">
+    Click folders to expand/collapse them. Click files to open them in the editor.
+  </Step>
+  <Step title="Toggle Sidebar">
+    Press `Cmd+B` or `Cmd+R` to show/hide the sidebar.
+  </Step>
+</Steps>
+
+### File Tree Features
+
+<CodeGroup>
+```rust src/file_tree.rs (Line 40-47)
+pub fn toggle_folder(&mut self, path: &Path) {
+    if self.expanded.contains(path) {
+        self.expanded.remove(path);
+    } else {
+        self.expanded.insert(path.to_path_buf());
+        populate_children(&mut self.entries, path); // Lazy load
+    }
+}
+```
+</CodeGroup>
+
+**Key characteristics:**
+
+- **Lazy Loading**: Folder contents load only when expanded
+- **Alphabetical Sorting**: Directories first, then files
+- **Smart Filtering**: Automatically ignores common directories:
+  - `.git`
+  - `node_modules`
+  - `target`
+  - `.DS_Store`
+  - `__pycache__`
+  - `.claude`
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+B` | Toggle sidebar visibility |
+| `Cmd+R` | Toggle sidebar visibility |
+| `Cmd+O` | Open folder dialog |
+
+<Tip>
+  The sidebar width is adjustable! Drag the separator between the sidebar and editor to resize.
+</Tip>
+
+## Fuzzy Finder
+
+The fuzzy finder provides instant file access with intelligent matching.
+
+### Opening the Fuzzy Finder
+
+Press `Cmd+Shift+F` to open the fuzzy finder overlay.
+
+### How Fuzzy Matching Works
+
+<CodeGroup>
+```rust src/fuzzy_finder.rs (Line 200-233)
+fn fuzzy_match(text: &str, pattern: &str) -> i32 {
+    if pattern.is_empty() {
+        return 1;
+    }
+
+    let mut score: i32 = 0;
+    let mut pattern_idx = 0;
+    let pattern_chars: Vec<char> = pattern.chars().collect();
+    let text_chars: Vec<char> = text.chars().collect();
+
+    for (i, &ch) in text_chars.iter().enumerate() {
+        if pattern_idx < pattern_chars.len() && ch == pattern_chars[pattern_idx] {
+            score += 100;
+
+            // Bonus for consecutive matches
+            if pattern_idx > 0 && i > 0 && text_chars[i - 1] == pattern_chars[pattern_idx - 1] {
+                score += 50;
+            }
+
+            // Bonus for word-boundary matches
+            if i == 0 || text_chars[i - 1] == '/' || text_chars[i - 1] == '_' || text_chars[i - 1] == '.' {
+                score += 30;
+            }
+
+            pattern_idx += 1;
+        }
+    }
+
+    if pattern_idx == pattern_chars.len() {
+        score
+    } else {
+        0
+    }
+}
+```
+</CodeGroup>
+
+**Scoring system:**
+
+- **Base match**: +100 points per character
+- **Consecutive matches**: +50 bonus points
+- **Word boundary matches**: +30 bonus points (after `/`, `_`, `.`, or at start)
+
+### Features
+
+<CardGroup cols={2}>
+  <Card title="Live Preview" icon="eye">
+    See file contents (first 200 lines) as you navigate results
+  </Card>
+  <Card title="Syntax Highlighting" icon="code">
+    Preview shows syntax highlighting based on file extension
+  </Card>
+  <Card title="Keyboard Navigation" icon="keyboard">
+    Use arrow keys to navigate, Enter to open, Escape to close
+  </Card>
+  <Card title="Smart Filtering" icon="filter">
+    Results ranked by match quality and relevance
+  </Card>
+</CardGroup>
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+Shift+F` | Open fuzzy finder |
+| `↑` / `↓` | Navigate results |
+| `Enter` | Open selected file |
+| `Escape` | Close fuzzy finder |
+
+<Note>
+  The fuzzy finder indexes all files in your workspace when a folder is opened, excluding hidden files and ignored directories.
+</Note>
+
+## Quick File Picker
+
+The quick file picker (`Cmd+T`) provides fast access to recent and workspace files.
+
+### Usage
+
+<Steps>
+  <Step title="Open Picker">
+    Press `Cmd+T` to open the quick file picker overlay.
+  </Step>
+  <Step title="Search or Browse">
+    Start typing to search files, or view recent files when the search is empty.
+  </Step>
+  <Step title="Select File">
+    Use arrow keys to navigate, press Enter to open the selected file.
+  </Step>
+</Steps>
+
+### Features
+
+- **Recent Files**: Shows up to 20 recently opened files when search is empty
+- **Fuzzy Search**: Uses SkimMatcherV2 for intelligent file matching
+- **Limited Results**: Shows top 20 matches for performance
+- **Relative Paths**: Displays paths relative to workspace root
+
+<CodeGroup>
+```rust src/search.rs (Line 95-113)
+pub fn fuzzy_find_files(
+    query: &str,
+    files: &[(String, PathBuf)],
+    max_results: usize,
+) -> Vec<(i64, String, PathBuf)> {
+    let matcher = SkimMatcherV2::default();
+
+    let mut scored: Vec<(i64, String, PathBuf)> = files
+        .iter()
+        .filter_map(|(display, abs_path)| {
+            matcher.fuzzy_match(display, query)
+                .map(|score| (score, display.clone(), abs_path.clone()))
+        })
+        .collect();
+
+    scored.sort_by(|a, b| b.0.cmp(&a.0));
+    scored.truncate(max_results);
+    scored
+}
+```
+</CodeGroup>
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+T` | Open quick file picker |
+| `↑` / `↓` | Navigate results |
+| `Enter` | Open selected file |
+| `Escape` | Close picker |
+
+## Workspace Search
+
+Search across all files in your workspace with the global search feature.
+
+### Opening Search
+
+Press `Cmd+Shift+T` (or use Command Palette → "Toggle Search") to open the search panel.
+
+### Search Features
+
+<AccordionGroup>
+  <Accordion title="Content Search">
+    Searches file contents (not just names) across your entire workspace.
+  </Accordion>
+  
+  <Accordion title="Git Integration">
+    Respects `.gitignore` files and hidden file patterns automatically.
+  </Accordion>
+  
+  <Accordion title="Match Preview">
+    Shows up to 3 matching lines per file with line numbers.
+  </Accordion>
+  
+  <Accordion title="Quick Navigation">
+    Click any match to jump directly to that file and line.
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+```rust src/search.rs (Line 18-64)
+pub fn search_workspace(root: &PathBuf, query: &str) -> Vec<SearchResult> {
+    use ignore::WalkBuilder;
+    use std::fs;
+
+    let query_lower = query.to_lowercase();
+    let mut results = Vec::new();
+
+    let walker = WalkBuilder::new(root)
+        .hidden(true)
+        .git_ignore(true)
+        .git_global(true)
+        .build();
+
+    for entry in walker.flatten() {
+        let path = entry.path();
+
+        if !path.is_file() {
+            continue;
+        }
+
+        let Ok(content) = fs::read_to_string(path) else {
+            continue;
+        };
+
+        let mut matches = Vec::new();
+        for (line_idx, line) in content.lines().enumerate() {
+            if line.to_lowercase().contains(&query_lower) {
+                matches.push(SearchMatch {
+                    line_number: line_idx + 1,
+                    line_content: line.to_string(),
+                });
+            }
+        }
+
+        if !matches.is_empty() {
+            results.push(SearchResult {
+                path: path.to_path_buf(),
+                file_name: path.file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string(),
+                matches,
+            });
+        }
+    }
+    results
+}
+```
+</CodeGroup>
+
+<Warning>
+  Workspace search requires at least 2 characters to activate. This prevents performance issues with single-character searches.
+</Warning>

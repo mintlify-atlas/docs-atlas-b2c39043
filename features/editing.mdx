@@ -1,0 +1,338 @@
+---
+title: Advanced Editing
+description: Rode's powerful editing features including syntax highlighting, multi-tab support, and customizable preferences
+---
+
+Rode provides a modern editing experience with features designed for productivity and comfort.
+
+## Multi-Tab Interface
+
+Work with multiple files simultaneously using Rode's tab system.
+
+### Tab Management
+
+<CardGroup cols={2}>
+  <Card title="Open Files" icon="file-plus">
+    Click files in the sidebar, use fuzzy finder, or press `Cmd+N` for a new file
+  </Card>
+  <Card title="Switch Tabs" icon="arrows-left-right">
+    Click tab headers to switch between open files
+  </Card>
+  <Card title="Close Tabs" icon="xmark">
+    Click the close button or press `Cmd+W` to close the active tab
+  </Card>
+  <Card title="Modified Indicator" icon="circle">
+    Tabs show a dot (●) when the file has unsaved changes
+  </Card>
+</CardGroup>
+
+### Tab Types
+
+Rode supports two types of tabs:
+
+<CodeGroup>
+```rust src/app.rs (Line 27-37)
+pub enum TabKind {
+    Editor {
+        content: Content,
+        modified: bool,
+        scroll_line: usize,
+    },
+    Preview {
+        md_items: Vec<markdown::Item>,
+    },
+}
+```
+</CodeGroup>
+
+**Editor tabs** contain editable text with syntax highlighting and modification tracking.
+
+**Preview tabs** render Markdown files with formatted output.
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+N` | Create new file |
+| `Cmd+W` | Close active tab |
+| `Cmd+S` | Save file |
+| `Cmd+Shift+S` | Save as (new location) |
+
+## Syntax Highlighting
+
+Rode uses a VSCode-compatible syntax highlighter for accurate, beautiful code rendering.
+
+### Supported Languages
+
+The highlighter detects file types by extension:
+
+<Tabs>
+  <Tab title="Programming">
+    - Rust (`.rs`)
+    - Python (`.py`)
+    - JavaScript (`.js`, `.jsx`)
+    - TypeScript (`.ts`, `.tsx`)
+    - Go (`.go`)
+    - Java (`.java`)
+    - C/C++ (`.c`, `.cpp`, `.h`)
+    - Ruby (`.rb`)
+    - PHP (`.php`)
+  </Tab>
+  <Tab title="Web">
+    - HTML (`.html`, `.htm`)
+    - CSS (`.css`)
+    - SCSS (`.scss`)
+    - JSON (`.json`)
+    - XML (`.xml`)
+  </Tab>
+  <Tab title="Markup & Config">
+    - Markdown (`.md`) with preview support
+    - YAML (`.yaml`, `.yml`)
+    - TOML (`.toml`)
+    - INI (`.ini`)
+  </Tab>
+  <Tab title="Shell">
+    - Bash (`.sh`, `.bash`)
+    - Zsh (`.zsh`)
+    - Fish (`.fish`)
+  </Tab>
+</Tabs>
+
+<CodeGroup>
+```rust src/ui/editor.rs (Line 78-89)
+let editor = TextEditor::new(content)
+    .on_action(Message::EditorAction)
+    .key_binding(editor_key_bindings)
+    .highlight_with::<VscodeHighlighter>(
+        Settings {
+            extension: extension.to_string(),
+        },
+        |highlight, _theme| highlight.to_format(),
+    )
+    .style(text_editor_style)
+    .padding(iced::Padding { top: 4.0, right: 4.0, bottom: 4.0, left: 4.0 })
+    .height(Length::Fill);
+```
+</CodeGroup>
+
+## Line Numbers & Gutter
+
+Rode displays line numbers in a gutter on the left side of the editor.
+
+### Gutter Features
+
+- **Current Line Highlighting**: Active line number shown in bright color
+- **Visible Window**: Shows 60 lines at a time for performance
+- **Overflow Indicators**: Displays `...` when content extends beyond viewport
+- **Smart Scrolling**: Automatically adjusts to keep cursor visible
+
+<CodeGroup>
+```rust src/ui/editor.rs (Line 11-60)
+pub const GUTTER_VISIBLE_LINES: usize = 60;
+
+pub fn create_editor<'a>(
+    content: &'a Content,
+    extension: &str,
+    current_line: usize,
+    scroll_line: usize,
+) -> Element<'a, Message> {
+    let total_lines = content.line_count().max(1);
+    let active_line = current_line.clamp(1, total_lines);
+    let max_start_line = total_lines.saturating_sub(GUTTER_VISIBLE_LINES - 1).max(1);
+    let start_line = scroll_line.clamp(1, max_start_line);
+    let end_line = (start_line + GUTTER_VISIBLE_LINES - 1).min(total_lines);
+
+    let mut gutter_lines = Vec::with_capacity(end_line - start_line + 3);
+
+    if start_line > 1 {
+        gutter_lines.push(
+            container(text("...").size(12).color(theme().text_dim))
+                .width(Length::Fixed(52.0))
+                .padding(iced::Padding { top: 0.0, right: 8.0, bottom: 0.0, left: 0.0 })
+                .align_right(Length::Fixed(52.0))
+                .into()
+        );
+    }
+
+    for line in start_line..=end_line {
+        let is_active = line == active_line;
+        gutter_lines.push(
+            container(
+                text(format!("{line:>4}"))
+                    .size(12)
+                    .color(if is_active { theme().text_primary } else { theme().text_dim })
+            )
+            .width(Length::Fixed(52.0))
+            .padding(iced::Padding { top: 0.0, right: 8.0, bottom: 0.0, left: 0.0 })
+            .align_right(Length::Fixed(52.0))
+            .into()
+        );
+    }
+    // ...
+}
+```
+</CodeGroup>
+
+## Cursor Position & Status
+
+The status bar displays your current position in the file.
+
+<Frame>
+  <img src="/images/status-bar.png" alt="Status bar showing line and column" />
+</Frame>
+
+**Status bar shows:**
+- Current file name
+- Line number (Ln)
+- Column number (Col)
+
+## Custom Key Bindings
+
+Rode extends standard editing with smart key bindings.
+
+### Enhanced Delete Operations
+
+<AccordionGroup>
+  <Accordion title="Backspace Bindings">
+    - `Backspace`: Delete character to the left
+    - `Cmd+Backspace`: Delete from cursor to start of line
+    - `Alt+Backspace`: Delete word to the left
+  </Accordion>
+  
+  <Accordion title="Delete Bindings">
+    - `Delete`: Delete character to the right
+    - `Cmd+Delete`: Delete from cursor to end of line
+    - `Alt+Delete`: Delete word to the right
+  </Accordion>
+</AccordionGroup>
+
+<CodeGroup>
+```rust src/ui/editor.rs (Line 102-144)
+fn editor_key_bindings(key_press: KeyPress) -> Option<Binding<Message>> {
+    let modifiers = key_press.modifiers;
+
+    match key_press.key.as_ref() {
+        Key::Named(key::Named::Backspace) => {
+            if modifiers.command() {
+                Some(Binding::Sequence(vec![
+                    Binding::Select(Motion::Home),
+                    Binding::Backspace,
+                ]))
+            } else if modifiers.alt() {
+                Some(Binding::Sequence(vec![
+                    Binding::Select(Motion::WordLeft),
+                    Binding::Backspace,
+                ]))
+            } else {
+                Binding::from_key_press(key_press)
+            }
+        }
+        Key::Named(key::Named::Delete) => {
+            if modifiers.command() {
+                Some(Binding::Sequence(vec![
+                    Binding::Select(Motion::End),
+                    Binding::Delete,
+                ]))
+            } else if modifiers.alt() {
+                Some(Binding::Sequence(vec![
+                    Binding::Select(Motion::WordRight),
+                    Binding::Delete,
+                ]))
+            } else {
+                Binding::from_key_press(key_press)
+            }
+        }
+        _ => Binding::from_key_press(key_press),
+    }
+}
+```
+</CodeGroup>
+
+## Editor Preferences
+
+Customize your editing experience through the settings panel.
+
+### Accessing Preferences
+
+Press `Cmd+Shift+S` to open settings, or use Command Palette → "Settings".
+
+### Available Settings
+
+<ParamField path="tab_size" type="number" default="4">
+  Number of spaces per indentation level (1-16)
+</ParamField>
+
+<ParamField path="use_spaces" type="boolean" default="true">
+  Use spaces instead of tab characters for indentation
+</ParamField>
+
+<ParamField path="theme_name" type="string" default="Catppuccin Mocha">
+  Active color theme
+</ParamField>
+
+### Configuration File
+
+Preferences are stored as Lua configuration:
+
+<CodeGroup>
+```lua ~/.config/rode/preferences.lua
+-- Rode Editor Preferences
+-- Edit these values to customize your editor
+
+return {
+    tab_size = 4,
+    use_spaces = true,
+    theme_name = "Catppuccin Mocha",
+}
+```
+</CodeGroup>
+
+<CodeGroup>
+```rust src/config/preferences.rs (Line 83-103)
+pub fn save_preferences(prefs: &EditorPreferences) -> Result<(), std::io::Error> {
+    let path = get_preferences_path();
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let content = format!
+        r#"-- Rode Editor Preferences
+-- Edit these values to customize your editor
+
+return {{
+    tab_size = {},
+    use_spaces = {},
+    theme_name = "{}",
+}}
+"#,
+        prefs.tab_size, prefs.use_spaces, prefs.theme_name,
+    );
+    let mut file = fs::File::create(path)?;
+    file.write_all(content.as_bytes())?;
+    Ok(())
+}
+```
+</CodeGroup>
+
+## Markdown Preview
+
+Rode can render Markdown files with live preview.
+
+### Activating Preview
+
+Press `Cmd+Shift+V` while viewing a Markdown file to open a preview tab.
+
+<Note>
+  Preview tabs are read-only and display formatted Markdown content. Edit the source file to make changes.
+</Note>
+
+## Scrolling & Navigation
+
+Rode provides smooth scrolling with keyboard and mouse support.
+
+- **Mouse Wheel**: Scroll through content (automatically scaled by 1/5 for precision)
+- **Cursor Following**: Viewport automatically scrolls to keep cursor visible
+- **60-Line Window**: Displays 60 lines at a time for optimal performance
+
+<Tip>
+  The editor automatically maintains your scroll position when switching between tabs.
+</Tip>

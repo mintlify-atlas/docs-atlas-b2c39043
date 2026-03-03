@@ -1,0 +1,448 @@
+---
+title: Building from Source
+description: Step-by-step guide to compiling and running Rode on your machine
+---
+
+This guide covers everything you need to build Rode from source code.
+
+## Prerequisites
+
+<CardGroup cols={2}>
+  <Card title="Rust Toolchain" icon="rust">
+    **Required**: Rust 2021 edition or later
+    
+    Install via [rustup](https://rustup.rs/)
+  </Card>
+  
+  <Card title="Cargo" icon="box">
+    **Required**: Cargo package manager
+    
+    Comes bundled with Rust
+  </Card>
+</CardGroup>
+
+<Note>
+Rode requires **Rust 2021 edition** as specified in `Cargo.toml`. Ensure your Rust installation is up to date:
+
+```bash
+rustup update stable
+```
+</Note>
+
+## Quick Start
+
+The fastest way to get Rode running:
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/kashsuks/rode
+    cd rode
+    ```
+  </Step>
+  
+  <Step title="Run the editor">
+    ```bash
+    cargo run
+    ```
+    
+    This will:
+    - Download and compile all dependencies
+    - Build the Rode binary
+    - Launch the editor
+  </Step>
+</Steps>
+
+<Warning>
+The first build will take several minutes as Cargo downloads and compiles all dependencies. Subsequent builds will be much faster thanks to incremental compilation.
+</Warning>
+
+## Build Commands
+
+### Development Build
+
+For testing and development:
+
+```bash
+cargo run
+```
+
+This creates an unoptimized debug build with full debug symbols.
+
+### Release Build
+
+For production use with optimizations:
+
+```bash
+cargo build --release
+```
+
+The optimized binary will be located at:
+```
+target/release/rode-editor
+```
+
+<Tip>
+Release builds are **significantly faster** and smaller than debug builds. Use `cargo run --release` to test release performance.
+</Tip>
+
+### Running Tests
+
+Rode includes a test suite in the `tests/` directory:
+
+```bash
+cargo test
+```
+
+## Dependencies
+
+Rode relies on the following core dependencies (from `Cargo.toml`):
+
+### GUI Frameworks
+
+<Accordion title="View GUI Dependencies">
+| Dependency | Version | Purpose |
+|------------|---------|----------|
+| `eframe` | 0.29 | egui framework wrapper |
+| `egui` | 0.29 | Immediate mode GUI library |
+| `iced` | 0.14.0 | Widget-based GUI framework |
+</Accordion>
+
+### Syntax Highlighting
+
+<Accordion title="View Syntax Dependencies">
+| Dependency | Version | Purpose |
+|------------|---------|----------|
+| `tree-sitter-highlight` | 0.25 | Syntax tree parsing |
+| `tree-sitter-rust` | 0.24 | Rust grammar |
+| `tree-sitter-javascript` | 0.23 | JavaScript grammar |
+| `tree-sitter-typescript` | 0.23 | TypeScript grammar |
+| `tree-sitter-python` | 0.23 | Python grammar |
+| `syntect` | 5.x | Syntax highlighting engine |
+</Accordion>
+
+### Graphics & Rendering
+
+<Accordion title="View Graphics Dependencies">
+| Dependency | Version | Purpose |
+|------------|---------|----------|
+| `image` | 0.24 | Image loading and processing |
+| `resvg` | 0.29 | SVG rendering |
+| `usvg` | 0.29 | SVG parsing |
+| `tiny-skia` | 0.11 | 2D graphics rendering |
+</Accordion>
+
+### File System & Search
+
+<Accordion title="View File System Dependencies">
+| Dependency | Version | Purpose |
+|------------|---------|----------|
+| `ignore` | 0.4 | .gitignore-aware file walking |
+| `fuzzy-matcher` | 0.3 | Fuzzy string matching |
+| `rfd` | 0.15 | Native file dialogs |
+| `include_dir` | 0.7 | Embed directories at compile time |
+</Accordion>
+
+### Utilities
+
+<Accordion title="View Utility Dependencies">
+| Dependency | Version | Purpose |
+|------------|---------|----------|
+| `serde` | 1.0 | Serialization framework |
+| `serde_json` | 1.0 | JSON serialization |
+| `regex` | 1.10 | Regular expressions |
+| `once_cell` | 1.19 | Lazy static values |
+| `dirs` | 5.x | Platform-specific directories |
+| `reqwest` | 0.12 | HTTP client (for updates/WakaTime) |
+</Accordion>
+
+<Info>
+All dependencies are automatically managed by Cargo. You don't need to install them manually.
+</Info>
+
+## Platform-Specific Instructions
+
+<Tabs>
+  <Tab title="macOS">
+    ### macOS Silicon (M1/M2/M3)
+    
+    For Apple Silicon Macs, download the pre-built binary:
+    
+    ```bash
+    # Download rode-editor-apple-silicon from GitHub Releases
+    # Make it executable
+    chmod +x /path/to/rode-editor-apple-silicon
+    
+    # Run the editor
+    ./rode-editor-apple-silicon
+    ```
+    
+    #### First Run on macOS
+    
+    If macOS blocks the app as unverified:
+    
+    <Steps>
+      <Step title="Open System Settings">
+        Navigate to **Privacy & Security**
+      </Step>
+      
+      <Step title="Allow the app">
+        Scroll down to the **Security** section
+        
+        You should see a message about `rode-editor-apple-silicon`
+      </Step>
+      
+      <Step title="Click 'Open Anyway'">
+        Grant permission to run the application
+      </Step>
+    </Steps>
+    
+    #### Building from Source
+    
+    ```bash
+    # Install Rust via Homebrew or rustup
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    
+    # Clone and build
+    git clone https://github.com/kashsuks/rode
+    cd rode
+    cargo build --release
+    ```
+  </Tab>
+  
+  <Tab title="Linux">
+    ### Linux
+    
+    Install dependencies (Ubuntu/Debian):
+    
+    ```bash
+    # Install Rust
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    
+    # Install required system libraries
+    sudo apt-get update
+    sudo apt-get install -y build-essential pkg-config libssl-dev
+    
+    # Clone and build
+    git clone https://github.com/kashsuks/rode
+    cd rode
+    cargo build --release
+    ```
+    
+    For other distributions, install the equivalent packages for:
+    - C/C++ compiler (gcc/clang)
+    - pkg-config
+    - OpenSSL development headers
+  </Tab>
+  
+  <Tab title="Windows">
+    ### Windows
+    
+    <Steps>
+      <Step title="Install Rust">
+        Download and run [rustup-init.exe](https://rustup.rs/)
+      </Step>
+      
+      <Step title="Install Visual Studio Build Tools">
+        Rust on Windows requires MSVC build tools:
+        
+        - Download [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/)
+        - Select "Desktop development with C++"
+      </Step>
+      
+      <Step title="Build Rode">
+        ```powershell
+        git clone https://github.com/kashsuks/rode
+        cd rode
+        cargo build --release
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Installation via Crates.io
+
+Rode is published on [crates.io](https://crates.io/crates/rode-editor) and can be installed with:
+
+```bash
+cargo install rode-editor
+```
+
+This will:
+- Download the latest stable version (currently **0.4.1**)
+- Compile with optimizations
+- Install the binary to `~/.cargo/bin/rode-editor`
+
+<Note>
+Make sure `~/.cargo/bin` is in your PATH to run `rode-editor` from anywhere.
+</Note>
+
+## Build Optimization
+
+### Faster Compilation
+
+To speed up compile times during development:
+
+1. **Use the Mold Linker** (Linux):
+   ```toml
+   # .cargo/config.toml
+   [target.x86_64-unknown-linux-gnu]
+   linker = "clang"
+   rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+   ```
+
+2. **Enable Parallel Compilation**:
+   ```bash
+   # Set in your shell profile
+   export CARGO_BUILD_JOBS=8
+   ```
+
+3. **Use cargo-watch** for auto-rebuild:
+   ```bash
+   cargo install cargo-watch
+   cargo watch -x run
+   ```
+
+### Smaller Binaries
+
+To reduce release binary size, add to `Cargo.toml`:
+
+```toml
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable link-time optimization
+codegen-units = 1   # Better optimization
+strip = true        # Remove debug symbols
+```
+
+<Warning>
+These optimizations will increase compile time but significantly reduce binary size.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build fails with linker errors">
+    **Solution**: Ensure you have a C/C++ compiler installed:
+    
+    - **macOS**: `xcode-select --install`
+    - **Linux**: `sudo apt-get install build-essential`
+    - **Windows**: Install Visual Studio Build Tools
+  </Accordion>
+  
+  <Accordion title="Cannot find OpenSSL">
+    **Solution**: Install OpenSSL development headers:
+    
+    - **macOS**: `brew install openssl`
+    - **Linux**: `sudo apt-get install libssl-dev`
+    - **Windows**: Use the `rustls-tls` feature instead (reqwest already uses it)
+  </Accordion>
+  
+  <Accordion title="Slow compilation on first build">
+    **Expected behavior**: The first build compiles all dependencies from scratch.
+    
+    Typical first build times:
+    - Debug: 5-10 minutes
+    - Release: 10-15 minutes
+    
+    Subsequent builds are much faster (seconds to minutes).
+  </Accordion>
+  
+  <Accordion title="Ran out of disk space during build">
+    **Solution**: Cargo builds can use significant disk space. Clean old artifacts:
+    
+    ```bash
+    cargo clean
+    ```
+    
+    Or clean the global cache:
+    ```bash
+    rm -rf ~/.cargo/registry
+    rm -rf ~/.cargo/git
+    ```
+  </Accordion>
+  
+  <Accordion title="Commits are not stable">
+    <Warning>
+    The GitHub `main` branch contains development commits that may not be stable. These are developer logs, not user-friendly releases.
+    </Warning>
+    
+    **Solutions**:
+    - Use releases from [GitHub Releases](https://github.com/kashsuks/rode/releases)
+    - Install via `cargo install rode-editor` for the latest stable version
+    - Expect instability in nightly builds when they arrive
+  </Accordion>
+</AccordionGroup>
+
+## Development Workflow
+
+Recommended workflow for Rode development:
+
+<Steps>
+  <Step title="Fork and clone">
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/rode
+    cd rode
+    ```
+  </Step>
+  
+  <Step title="Create a feature branch">
+    ```bash
+    git checkout -b feature/my-feature
+    ```
+  </Step>
+  
+  <Step title="Make changes and test">
+    ```bash
+    cargo run  # Test your changes
+    cargo test # Run tests
+    cargo clippy # Check for warnings
+    ```
+  </Step>
+  
+  <Step title="Format code">
+    ```bash
+    cargo fmt
+    ```
+  </Step>
+  
+  <Step title="Commit and push">
+    ```bash
+    git add .
+    git commit -m "Add feature: description"
+    git push origin feature/my-feature
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+See the [Contributing Guide](/development/contributing) for detailed contribution guidelines.
+</Tip>
+
+## Build Artifacts
+
+After building, you'll find:
+
+```
+rode/
+├── target/
+│   ├── debug/
+│   │   └── rode-editor          # Debug binary
+│   └── release/
+│       └── rode-editor          # Release binary (optimized)
+├── Cargo.lock                   # Locked dependency versions
+└── Cargo.toml                   # Project manifest
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/development/architecture">
+    Understand Rode's internal architecture
+  </Card>
+  
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Learn how to contribute to Rode
+  </Card>
+</CardGroup>

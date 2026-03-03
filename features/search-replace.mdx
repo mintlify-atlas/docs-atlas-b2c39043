@@ -1,0 +1,384 @@
+---
+title: Search & Replace
+description: Find and replace text with case-sensitive matching, navigation, and bulk operations
+---
+
+Rode's find and replace feature provides powerful text manipulation capabilities with an intuitive interface.
+
+## Opening Find & Replace
+
+Press `Cmd+F` to open the find and replace panel.
+
+<Frame>
+  <img src="/images/find-replace.png" alt="Find and replace panel" />
+</Frame>
+
+The panel appears above the editor with two input fields:
+- **Find**: Text to search for
+- **Replace**: Text to replace matches with
+
+## Basic Search
+
+<Steps>
+  <Step title="Open Panel">
+    Press `Cmd+F` to activate the find and replace panel.
+  </Step>
+  
+  <Step title="Enter Search Term">
+    Type your search query in the "Find" field.
+  </Step>
+  
+  <Step title="View Matches">
+    The status shows current match position and total count (e.g., "2 of 5").
+  </Step>
+  
+  <Step title="Navigate Results">
+    Use the next/previous buttons or keyboard shortcuts to jump between matches.
+  </Step>
+</Steps>
+
+### Match Counter
+
+The find panel displays match information in real-time:
+
+<CodeGroup>
+```rust src/find_replace.rs (Line 126-135)
+pub fn match_status(&self) -> String {
+    if self.find_text.is_empty() {
+        String::new()
+    } else if self.match_count > 0 {
+        format!("{} of {}", self.current_match + 1, self.match_count)
+    } else {
+        "No matches".to_string()
+    }
+}
+```
+</CodeGroup>
+
+**Status messages:**
+- Empty when no search term
+- "2 of 5" when matches are found
+- "No matches" when search has no results
+
+## Case Sensitivity
+
+Toggle case-sensitive matching with the case sensitivity button.
+
+<Tabs>
+  <Tab title="Case Insensitive (Default)">
+    Matches text regardless of capitalization:
+    - "hello" matches "Hello", "HELLO", "hello"
+    - "Test" matches "test", "TEST", "Test"
+  </Tab>
+  
+  <Tab title="Case Sensitive">
+    Matches text exactly as typed:
+    - "hello" matches only "hello"
+    - "Test" matches only "Test"
+  </Tab>
+</Tabs>
+
+<CodeGroup>
+```rust src/find_replace.rs (Line 43-71)
+pub fn find_matches(&mut self, text: &str) -> Vec<usize> {
+    if self.find_text.is_empty() {
+        self.matches.clear();
+        self.match_count = 0;
+        return Vec::new();
+    }
+
+    let mut found_matches = Vec::new();
+    let search_text = if self.case_sensitive {
+        text.to_string()
+    } else {
+        text.to_lowercase()
+    };
+    let find = if self.case_sensitive {
+        self.find_text.clone()
+    } else {
+        self.find_text.to_lowercase()
+    };
+
+    let mut start = 0;
+    while let Some(pos) = search_text[start..].find(&find) {
+        found_matches.push(start + pos);
+        start += pos + 1;
+    }
+
+    self.matches = found_matches.clone();
+    self.match_count = found_matches.len();
+    found_matches
+}
+```
+</CodeGroup>
+
+### Keyboard Shortcut
+
+| Action | Shortcut |
+|--------|----------|
+| Toggle case sensitivity | Click case button in panel |
+
+<Note>
+  Toggling case sensitivity automatically re-runs the search with the new setting.
+</Note>
+
+## Match Navigation
+
+Quickly jump between search results.
+
+### Next Match
+
+Navigate to the next occurrence:
+- Click the "Next" button
+- Use keyboard shortcut (if configured)
+
+<CodeGroup>
+```rust src/find_replace.rs (Line 73-77)
+pub fn go_to_next_match(&mut self) {
+    if !self.matches.is_empty() {
+        self.current_match = (self.current_match + 1) % self.matches.len();
+    }
+}
+```
+</CodeGroup>
+
+### Previous Match
+
+Navigate to the previous occurrence:
+- Click the "Previous" button
+- Use keyboard shortcut (if configured)
+
+<CodeGroup>
+```rust src/find_replace.rs (Line 79-87)
+pub fn go_to_prev_match(&mut self) {
+    if !self.matches.is_empty() {
+        if self.current_match == 0 {
+            self.current_match = self.matches.len() - 1;
+        } else {
+            self.current_match -= 1;
+        }
+    }
+}
+```
+</CodeGroup>
+
+**Navigation behavior:**
+- Wraps around (next from last match goes to first)
+- Updates match counter automatically
+- Preserves selection on the current match
+
+## Replace Operations
+
+Rode offers both single and bulk replace operations.
+
+### Replace Single Match
+
+Replace the currently selected match:
+
+<Steps>
+  <Step title="Navigate to Match">
+    Use next/previous to highlight the match you want to replace.
+  </Step>
+  
+  <Step title="Enter Replacement">
+    Type the replacement text in the "Replace" field.
+  </Step>
+  
+  <Step title="Replace One">
+    Click "Replace" to replace only the current match.
+  </Step>
+</Steps>
+
+<CodeGroup>
+```rust src/find_replace.rs (Line 89-105)
+pub fn replace_next(&mut self, text: &mut String) -> bool {
+    if self.matches.is_empty() || self.current_match >= self.matches.len() {
+        return false;
+    }
+
+    let pos = self.matches[self.current_match];
+    let end = pos + self.find_text.len();
+    text.replace_range(pos..end, &self.replace_text);
+
+    self.find_matches(text);
+
+    if self.current_match >= self.matches.len() && !self.matches.is_empty() {
+        self.current_match = self.matches.len() - 1;
+    }
+
+    true
+}
+```
+</CodeGroup>
+
+**After replacement:**
+- Match list is updated
+- Current match advances to next occurrence (or stays on last if at end)
+- Document is marked as modified
+
+### Replace All Matches
+
+Replace every occurrence in the document:
+
+<Steps>
+  <Step title="Verify Search">
+    Ensure your search term finds the correct matches.
+  </Step>
+  
+  <Step title="Enter Replacement">
+    Type the replacement text in the "Replace" field.
+  </Step>
+  
+  <Step title="Replace All">
+    Click "Replace All" to replace every match in the document.
+  </Step>
+</Steps>
+
+<CodeGroup>
+```rust src/find_replace.rs (Line 107-124)
+pub fn replace_all(&mut self, text: &mut String) -> usize {
+    if self.find_text.is_empty() {
+        return 0;
+    }
+
+    let count = self.matches.len();
+
+    for &pos in self.matches.iter().rev() {
+        let end = pos + self.find_text.len();
+        text.replace_range(pos..end, &self.replace_text);
+    }
+
+    self.matches.clear();
+    self.match_count = 0;
+    self.current_match = 0;
+
+    count
+}
+```
+</CodeGroup>
+
+<Warning>
+  Replace All is not undoable! Make sure your search matches the intended text before replacing all occurrences.
+</Warning>
+
+**Replace All behavior:**
+- Processes matches in reverse order (to maintain position accuracy)
+- Clears the match list after completion
+- Returns the number of replacements made
+- Marks document as modified
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+F` | Open find and replace |
+| `Escape` | Close find and replace |
+| (buttons) | Next match |
+| (buttons) | Previous match |
+| (buttons) | Replace one |
+| (buttons) | Replace all |
+| (button) | Toggle case sensitivity |
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Rename Variables" icon="pen">
+    Find all instances of a variable name and replace with a new name
+  </Card>
+  
+  <Card title="Update URLs" icon="link">
+    Change domain names or paths across documentation
+  </Card>
+  
+  <Card title="Fix Typos" icon="spell-check">
+    Search for common misspellings and correct them
+  </Card>
+  
+  <Card title="Refactor Code" icon="code">
+    Update function names, class names, or constants
+  </Card>
+</CardGroup>
+
+## Feature State
+
+The find and replace panel maintains state:
+
+<ParamField path="open" type="boolean">
+  Whether the panel is currently visible
+</ParamField>
+
+<ParamField path="find_text" type="string">
+  Current search query
+</ParamField>
+
+<ParamField path="replace_text" type="string">
+  Text to replace matches with
+</ParamField>
+
+<ParamField path="case_sensitive" type="boolean">
+  Whether matching is case-sensitive
+</ParamField>
+
+<ParamField path="match_count" type="number">
+  Total number of matches found
+</ParamField>
+
+<ParamField path="current_match" type="number">
+  Index of the currently highlighted match (0-based)
+</ParamField>
+
+<ParamField path="matches" type="Vec<usize>">
+  Positions of all matches in the document
+</ParamField>
+
+<CodeGroup>
+```rust src/find_replace.rs (Line 5-27)
+pub struct FindReplace {
+    pub open: bool,
+    pub find_text: String,
+    pub replace_text: String,
+    pub case_sensitive: bool,
+    pub match_count: usize,
+    pub current_match: usize,
+    pub matches: Vec<usize>,
+}
+
+impl Default for FindReplace {
+    fn default() -> Self {
+        Self {
+            open: false,
+            find_text: String::new(),
+            replace_text: String::new(),
+            case_sensitive: false,
+            match_count: 0,
+            current_match: 0,
+            matches: Vec::new(),
+        }
+    }
+}
+```
+</CodeGroup>
+
+## Tips & Best Practices
+
+<AccordionGroup>
+  <Accordion title="Review Before Replace All">
+    Use next/previous to review matches before doing a bulk replace. This helps catch unintended replacements.
+  </Accordion>
+  
+  <Accordion title="Case Sensitivity for Precision">
+    Enable case-sensitive search when working with code to avoid matching variable names with different cases.
+  </Accordion>
+  
+  <Accordion title="Empty Replace for Deletion">
+    Leave the replace field empty to delete all matches of the search term.
+  </Accordion>
+  
+  <Accordion title="Check Match Counter">
+    The match counter ("X of Y") helps verify you're finding what you expect before replacing.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  The find and replace feature works on the currently active file only. To search across multiple files, use the workspace search feature (`Cmd+Shift+T`).
+</Tip>

@@ -1,0 +1,365 @@
+---
+title: Terminal Integration
+description: Launch your system's default terminal directly from Rode
+---
+
+Rode can launch your system's native terminal application, automatically opening it in your current workspace directory.
+
+## Opening the Terminal
+
+Press `Cmd+J` or select "Toggle Terminal" from the Command Palette.
+
+<Note>
+  The terminal opens as a separate system window, not integrated within Rode. This allows you to use your configured terminal emulator with all its features.
+</Note>
+
+## How It Works
+
+Rode detects your operating system and launches the appropriate terminal:
+
+<Tabs>
+  <Tab title="macOS">
+    Rode attempts to launch terminals in this order:
+    
+    1. **iTerm2** (if installed)
+    2. **Terminal.app** (fallback)
+    
+    The terminal opens in the current workspace directory using AppleScript.
+  </Tab>
+  
+  <Tab title="Windows">
+    Rode attempts to launch terminals in this order:
+    
+    1. **Windows Terminal** (`wt.exe`)
+    2. **PowerShell** (`powershell.exe`)
+    3. **Command Prompt** (`cmd.exe`)
+    
+    The terminal opens with the working directory set to your workspace.
+  </Tab>
+  
+  <Tab title="Linux">
+    Rode attempts to find and launch terminals in this order:
+    
+    1. **gnome-terminal**
+    2. **konsole**
+    3. **xfce4-terminal**
+    4. **alacritty**
+    5. **kitty**
+    6. **terminator**
+    7. **tilix**
+    8. **urxvt**
+    9. **xterm**
+    
+    The first available terminal is launched with the workspace directory.
+  </Tab>
+</Tabs>
+
+## Implementation
+
+### Terminal Structure
+
+<CodeGroup>
+```rust src/terminal.rs (Line 5-16)
+pub struct Terminal {
+    last_opened_directory: Option<PathBuf>,
+}
+
+impl Default for Terminal {
+    fn default() -> Self {
+        Self {
+            last_opened_directory: None,
+        }
+    }
+}
+```
+</CodeGroup>
+
+The terminal maintains state about the last opened directory, ensuring it opens in the correct location.
+
+### macOS Implementation
+
+<CodeGroup>
+```rust src/terminal.rs (Line 49-84)
+fn open_macos_terminal(&self, directory: &PathBuf) -> std::io::Result<()> {
+    let dir_str = directory.display().to_string();
+
+    // Try iTerm2 first
+    if let Ok(output) = Command::new("osascript")
+        .arg("-e")
+        .arg(format!(
+            r#"tell application "iTerm"
+                create window with default profile
+                tell current session of current window
+                    write text "cd '{}'"
+                end tell
+            end tell"#,
+            dir_str
+        ))
+        .output()
+    {
+        if output.status.success() {
+            return Ok(());
+        }
+    }
+
+    // Fallback to Terminal.app
+    Command::new("osascript")
+        .arg("-e")
+        .arg(format!(
+            r#"tell application "Terminal"
+                activate
+                do script "cd '{}'"
+            end tell"#,
+            dir_str
+        ))
+        .spawn()?;
+
+    Ok(())
+}
+```
+</CodeGroup>
+
+**Features:**
+- Uses AppleScript for native integration
+- Tries iTerm2 first (popular among developers)
+- Falls back gracefully to Terminal.app
+- Automatically changes to workspace directory
+
+### Windows Implementation
+
+<CodeGroup>
+```rust src/terminal.rs (Line 86-110)
+fn open_windows_terminal(&self, directory: &PathBuf) -> std::io::Result<()> {
+    let dir_str = directory.display().to_string();
+
+    if Command::new("wt.exe")
+        .args(&["-d", &dir_str])
+        .spawn()
+        .is_ok()
+    {
+        return Ok(());
+    }
+
+    if Command::new("powershell.exe")
+        .args(&["-NoExit", "-Command", &format!("cd '{}'", dir_str)])
+        .spawn()
+        .is_ok()
+    {
+        return Ok(());
+    }
+
+    Command::new("cmd.exe")
+        .args(&["/K", "cd", "/D", &dir_str])
+        .spawn()?;
+
+    Ok(())
+}
+```
+</CodeGroup>
+
+**Features:**
+- Prefers modern Windows Terminal
+- Falls back to PowerShell with `-NoExit` flag
+- Final fallback to Command Prompt
+- Uses appropriate directory flags for each terminal
+
+### Linux Implementation
+
+<CodeGroup>
+```rust src/terminal.rs (Line 112-139)
+fn open_linux_terminal(&self, directory: &PathBuf) -> std::io::Result<()> {
+    let dir_str = directory.display().to_string();
+    let xterm_cmd = format!("cd '{}' && exec $SHELL", dir_str);
+
+    let terminals = vec![
+        ("gnome-terminal", vec!["--working-directory", &dir_str]),
+        ("konsole", vec!["--workdir", &dir_str]),
+        ("xfce4-terminal", vec!["--working-directory", &dir_str]),
+        ("alacritty", vec!["--working-directory", &dir_str]),
+        ("kitty", vec!["--directory", &dir_str]),
+        ("terminator", vec!["--working-directory", &dir_str]),
+        ("tilix", vec!["--working-directory", &dir_str]),
+        ("urxvt", vec!["-cd", &dir_str]),
+        ("xterm", vec!["-e", &xterm_cmd]),
+    ];
+
+    for (terminal, args) in terminals {
+        if Command::new(terminal).args(&args).spawn().is_ok() {
+            return Ok(());
+        }
+    }
+
+    Err(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "No supported terminal emulator found",
+    ))
+}
+```
+</CodeGroup>
+
+**Features:**
+- Comprehensive terminal support (9 different emulators)
+- Each terminal uses its native working directory flag
+- Tries terminals in order of popularity
+- Returns helpful error if no terminal is found
+
+## Directory Selection
+
+The terminal opens in the most appropriate directory:
+
+<CodeGroup>
+```rust src/terminal.rs (Line 29-42)
+fn open_system_terminal(&mut self) {
+    let directory = self
+        .last_opened_directory
+        .clone()
+        .or_else(|| std::env::current_dir().ok())
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    let result = if cfg!(target_os = "macos") {
+        self.open_macos_terminal(&directory)
+    } else if cfg!(target_os = "windows") {
+        self.open_windows_terminal(&directory)
+    } else {
+        self.open_linux_terminal(&directory)
+    };
+```
+</CodeGroup>
+
+**Priority order:**
+
+1. **Last opened directory**: From the workspace folder you opened in Rode
+2. **Current working directory**: Where Rode was launched from
+3. **Fallback**: Current directory (`.`)
+
+## Setting the Directory
+
+Rode automatically sets the terminal directory when you open a folder:
+
+<CodeGroup>
+```rust src/terminal.rs (Line 24-27)
+pub fn set_directory(&mut self, directory: PathBuf) {
+    self.last_opened_directory = Some(directory);
+}
+```
+</CodeGroup>
+
+This happens automatically when:
+- You open a folder with `Cmd+O`
+- A workspace is opened via the Command Palette
+- The file tree root changes
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+J` | Toggle terminal (launch new instance) |
+
+<Tip>
+  Use the Command Palette (`Cmd+Shift+P`) and search for "terminal" to access this feature without remembering the shortcut.
+</Tip>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Run Build Commands" icon="hammer">
+    Quickly compile or build your project without leaving Rode
+  </Card>
+  
+  <Card title="Git Operations" icon="code-branch">
+    Execute git commands in the project directory
+  </Card>
+  
+  <Card title="Package Management" icon="box">
+    Install dependencies with npm, cargo, pip, etc.
+  </Card>
+  
+  <Card title="Run Tests" icon="flask">
+    Execute test suites from the command line
+  </Card>
+</CardGroup>
+
+## Error Handling
+
+If the terminal fails to open, Rode:
+
+<CodeGroup>
+```rust src/terminal.rs (Line 44-47)
+if let Err(e) = result {
+    eprintln!("Failed to open terminal: {}", e);
+}
+```
+</CodeGroup>
+
+**Common errors:**
+- No supported terminal emulator found (Linux)
+- Terminal executable not in PATH
+- Permission issues (rare)
+
+<Warning>
+  On Linux, if you see "No supported terminal emulator found", install one of the supported terminals like gnome-terminal, konsole, or alacritty.
+</Warning>
+
+## Comparison with Integrated Terminals
+
+| Feature | Rode (External) | Integrated Terminals |
+|---------|----------------|----------------------|
+| **Full feature set** | ✓ (uses your terminal) | Limited |
+| **Custom config** | ✓ (respects dotfiles) | Requires duplication |
+| **Performance** | ✓ (native) | Can impact editor |
+| **Window management** | Separate window | Panel within editor |
+| **Persistence** | Independent | Tied to editor |
+
+<Note>
+  Rode's approach of launching external terminals gives you the full power of your configured terminal environment without the complexity of embedding a terminal emulator.
+</Note>
+
+## Integration with Workflow
+
+The terminal integration works seamlessly with Rode's other features:
+
+### From File Tree
+
+When you:
+1. Open a folder (`Cmd+O`)
+2. Browse files in the tree
+3. Press `Cmd+J` to open terminal
+
+The terminal opens at the folder root, ready for commands.
+
+### Quick Access Pattern
+
+Common workflow:
+```
+1. Cmd+Shift+P → "Open Folder"
+2. Edit files in Rode
+3. Cmd+J → Terminal opens in that folder
+4. Run build/test commands
+5. Return to Rode for editing
+```
+
+## Platform-Specific Tips
+
+<AccordionGroup>
+  <Accordion title="macOS">
+    **iTerm2 Users**: Rode automatically detects and uses iTerm2 if installed. Configure iTerm2 profiles for even better integration.
+    
+    **Terminal.app**: Set your preferred shell in Terminal → Preferences → General.
+  </Accordion>
+  
+  <Accordion title="Windows">
+    **Windows Terminal**: Install from the Microsoft Store for the best experience. Rode will automatically use it.
+    
+    **PowerShell Core**: If you have pwsh installed, configure it as the default shell in Windows Terminal settings.
+  </Accordion>
+  
+  <Accordion title="Linux">
+    **Multiple Terminals**: Rode tries terminals in order. To use a specific terminal, ensure it's first in the list or uninstall alternatives.
+    
+    **Custom Terminals**: If your terminal isn't supported, create an alias or wrapper script named as one of the supported terminals.
+  </Accordion>
+</AccordionGroup>
+
+<Check>
+  The terminal integration provides instant access to command-line tools while keeping Rode lightweight and focused on editing.
+</Check>

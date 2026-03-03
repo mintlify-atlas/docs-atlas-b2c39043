@@ -1,0 +1,415 @@
+---
+title: Architecture
+description: Understanding Rode's internal architecture and module organization
+---
+
+Rode is a text editor written in Rust, built on top of the [egui](https://docs.rs/egui/latest/egui/) and [iced](https://iced.rs/) GUI frameworks. This document outlines the architectural design and module organization.
+
+## Core Architecture
+
+Rode follows a modular architecture with clear separation of concerns. The application is structured around the **App** struct, which serves as the central state manager and orchestrates all UI components and functionality.
+
+### Application Structure
+
+The main application flow is:
+
+1. **Entry Point** (`main.rs:24`): Initializes the Iced application with the App struct
+2. **App Initialization** (`app.rs:183`): Creates the default application state and checks for updates
+3. **Event Loop**: Handles user input through the `update()` method and renders UI through `view()`
+4. **Subscription System** (`app.rs:990`): Listens to keyboard/mouse events for global shortcuts
+
+<CodeGroup>
+```rust main.rs
+fn main() -> iced::Result {
+    iced::application(app::App::new, app::App::update, app::App::view)
+        .title("Rode")
+        .subscription(|app| app.subscription())
+        .font(FIRA_CODE)
+        .window_size((1200.0, 800.0))
+        .run()
+}
+```
+</CodeGroup>
+
+## Module Organization
+
+Rode is organized into the following core modules:
+
+### UI & Rendering
+
+<CardGroup cols={2}>
+  <Card title="app" icon="window">
+    **Core application state and logic**
+    
+    - Main App struct with tab management
+    - Event handling and message routing
+    - View rendering orchestration
+    - Located at `src/app.rs`
+  </Card>
+  
+  <Card title="ui" icon="paintbrush">
+    **UI components and styling**
+    
+    - `editor.rs`: Text editor widget creation
+    - `sidebar.rs`: File tree sidebar rendering
+    - `styles.rs`: Custom widget styles
+    - Located at `src/ui/`
+  </Card>
+  
+  <Card title="theme" icon="palette">
+    **Theming system**
+    
+    - Color palette definitions
+    - Built-in themes (Catppuccin, Nord, etc.)
+    - Syntax highlighting theme integration
+    - Located at `src/theme.rs`
+  </Card>
+  
+  <Card title="icons" icon="image">
+    **Icon management**
+    
+    - SVG icon loading and rendering
+    - File type icons for the file tree
+    - Located at `src/icons.rs`
+  </Card>
+</CardGroup>
+
+### Editor Features
+
+<CardGroup cols={2}>
+  <Card title="autocomplete" icon="sparkles">
+    **Intelligent code completion**
+    
+    - `engine.rs`: Completion engine
+    - `context.rs`: Context analysis
+    - `language.rs`: Language-specific providers
+    - `scoring.rs`: Suggestion ranking
+    - Located at `src/autocomplete/`
+  </Card>
+  
+  <Card title="syntax" icon="code">
+    **Syntax highlighting**
+    
+    - Tree-sitter integration for parsing
+    - Support for Rust, JavaScript, TypeScript, Python
+    - Syntect for syntax highlighting themes
+    - Located at `src/syntax.rs`
+  </Card>
+  
+  <Card title="find_replace" icon="search">
+    **Find and replace functionality**
+    
+    - Text search with case sensitivity
+    - Replace one or replace all operations
+    - Match navigation
+    - Located at `src/find_replace.rs`
+  </Card>
+  
+  <Card title="command_input" icon="terminal">
+    **Vim-style command input**
+    
+    - Colon-command interface
+    - Command parsing and execution
+    - Located at `src/command_input.rs`
+  </Card>
+</CardGroup>
+
+### File & Project Management
+
+<CardGroup cols={2}>
+  <Card title="file_tree" icon="folder-tree">
+    **File system navigation**
+    
+    - Lazy-loaded directory scanning
+    - Folder expansion/collapse
+    - File selection tracking
+    - Ignores common directories (`.git`, `node_modules`, etc.)
+    - Located at `src/file_tree.rs`
+  </Card>
+  
+  <Card title="fuzzy_finder" icon="magnifying-glass">
+    **Quick file navigation**
+    
+    - Fuzzy file search across workspace
+    - File preview on selection
+    - Keyboard navigation (Ctrl+P)
+    - Located at `src/fuzzy_finder.rs`
+  </Card>
+  
+  <Card title="search" icon="binoculars">
+    **Workspace-wide search**
+    
+    - Multi-file content search
+    - Search result aggregation
+    - File collection and indexing
+    - Located at `src/search.rs`
+  </Card>
+  
+  <Card title="command_palette" icon="list">
+    **Command palette**
+    
+    - Quick access to editor commands
+    - Fuzzy command filtering
+    - Keyboard-driven interface (Ctrl+Shift+P)
+    - Located at `src/command_palette.rs`
+  </Card>
+</CardGroup>
+
+### Configuration & Preferences
+
+<CardGroup cols={2}>
+  <Card title="config" icon="gear">
+    **Configuration management**
+    
+    - `preferences.rs`: Editor preferences (tab size, spaces, etc.)
+    - `theme_manager.rs`: Custom Lua theme loading
+    - Persistent settings storage
+    - Located at `src/config/`
+  </Card>
+  
+  <Card title="wakatime" icon="chart-line">
+    **WakaTime integration**
+    
+    - `client.rs`: API client for heartbeats
+    - `config.rs`: WakaTime configuration
+    - Automatic time tracking
+    - Located at `src/wakatime/`
+  </Card>
+</CardGroup>
+
+### Utilities
+
+<CardGroup cols={2}>
+  <Card title="terminal" icon="terminal">
+    **Integrated terminal**
+    
+    - System shell integration
+    - Directory-aware terminal sessions
+    - Located at `src/terminal.rs`
+  </Card>
+  
+  <Card title="updater" icon="arrow-up">
+    **Auto-update system**
+    
+    - GitHub release checking
+    - Update notifications
+    - Located at `src/updater.rs`
+  </Card>
+  
+  <Card title="message" icon="envelope">
+    **Message types**
+    
+    - Event message definitions
+    - Message routing enum
+    - Located at `src/message.rs`
+  </Card>
+  
+  <Card title="resources" icon="box">
+    **Embedded resources**
+    
+    - Asset bundling
+    - Icon and font embedding
+    - Located at `src/resources.rs`
+  </Card>
+</CardGroup>
+
+## State Management
+
+The `App` struct in `src/app.rs:52` maintains all application state:
+
+<Accordion title="View App State Structure">
+```rust
+pub struct App {
+    // Tab Management
+    tabs: Vec<Tab>,
+    active_tab: Option<usize>,
+    
+    // Editor State
+    cursor_line: usize,
+    cursor_col: usize,
+    
+    // Sidebar
+    file_tree: Option<FileTree>,
+    sidebar_visible: bool,
+    sidebar_width: f32,
+    
+    // Search & Navigation
+    fuzzy_finder: FuzzyFinder,
+    command_palette: CommandPalette,
+    search_query: String,
+    search_results: Vec<SearchResult>,
+    
+    // Features
+    terminal: Terminal,
+    find_replace: FindReplace,
+    command_input: CommandInput,
+    
+    // Configuration
+    editor_preferences: EditorPreferences,
+    active_theme_name: String,
+    wakatime: WakaTimeConfig,
+    
+    // UI State
+    settings_open: bool,
+    notification: Option<Notification>,
+    update_banner: Option<UpdateInfo>,
+}
+```
+</Accordion>
+
+## Message-Driven Architecture
+
+Rode uses Iced's message-driven architecture. All user interactions generate messages that are processed by the `update()` method:
+
+<Steps>
+  <Step title="User Action">
+    User interacts with the UI (clicks button, presses key, etc.)
+  </Step>
+  
+  <Step title="Message Created">
+    The interaction generates a `Message` enum variant
+  </Step>
+  
+  <Step title="Update Handler">
+    `App::update()` receives the message and updates state
+  </Step>
+  
+  <Step title="View Re-render">
+    `App::view()` is called to render the new state
+  </Step>
+</Steps>
+
+## Tab System
+
+Rode supports multiple file tabs with two types:
+
+<CodeGroup>
+```rust Tab Types
+#[derive(Debug)]
+pub enum TabKind {
+    Editor {
+        content: Content,
+        modified: bool,
+        scroll_line: usize,
+    },
+    Preview {
+        md_items: Vec<markdown::Item>,
+    },
+}
+
+#[derive(Debug)]
+pub struct Tab {
+    pub path: PathBuf,
+    pub name: String,
+    pub kind: TabKind,
+}
+```
+</CodeGroup>
+
+- **Editor tabs**: Editable text content with syntax highlighting
+- **Preview tabs**: Read-only markdown preview rendering
+
+## File Tree Architecture
+
+The file tree uses a lazy-loading approach for performance:
+
+1. **Initial Scan** (`file_tree.rs:71`): Only scans the root directory
+2. **On Expand**: Populates children when a folder is toggled (`file_tree.rs:45`)
+3. **Ignored Paths**: Skips `.git`, `node_modules`, `target`, etc. (`file_tree.rs:68`)
+4. **State Tracking**: Uses a `HashSet` to track expanded folders
+
+<Note>
+The file tree only stores **expanded** folders in the `HashSet` to save memory. All other folders are considered collapsed by default.
+</Note>
+
+## Syntax Highlighting Pipeline
+
+Rode uses a dual approach for syntax highlighting:
+
+<Steps>
+  <Step title="Tree-sitter Parsing">
+    Parses source code into an AST for supported languages (Rust, JS, TS, Python)
+  </Step>
+  
+  <Step title="Syntect Highlighting">
+    Applies theme colors to syntax elements using Syntect
+  </Step>
+  
+  <Step title="Theme Integration">
+    Converts editor theme to Syntect-compatible format
+  </Step>
+</Steps>
+
+## Keyboard Shortcuts
+
+Global shortcuts are handled in `app.rs:990` via the subscription system:
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl + B` | Toggle sidebar |
+| `Cmd/Ctrl + P` | Toggle fuzzy finder |
+| `Cmd/Ctrl + Shift + P` | Toggle command palette |
+| `Cmd/Ctrl + F` | Find and replace |
+| `Cmd/Ctrl + S` | Save file |
+| `Cmd/Ctrl + W` | Close tab |
+| `Cmd/Ctrl + N` | New file |
+| `Cmd/Ctrl + O` | Open folder |
+| `Cmd/Ctrl + J` | Toggle terminal |
+| `Escape` | Close overlays |
+
+## Performance Considerations
+
+<AccordionGroup>
+  <Accordion title="Lazy Loading">
+    - File tree children are loaded on-demand
+    - Workspace file indexing happens on folder open
+    - Preview content is cached in fuzzy finder
+  </Accordion>
+  
+  <Accordion title="Ignored Directories">
+    Both file tree and fuzzy finder skip common large directories:
+    - `.git`, `node_modules`, `target`
+    - `__pycache__`, `.DS_Store`, `.vscode`
+    - `dist`, `build`, `.next`
+  </Accordion>
+  
+  <Accordion title="Efficient State Updates">
+    - Only modified tabs are marked dirty
+    - Search results are computed asynchronously
+    - File operations use async tasks
+  </Accordion>
+</AccordionGroup>
+
+## Extension Points
+
+Rode is designed to be extended in several areas:
+
+<CardGroup cols={2}>
+  <Card title="Language Support" icon="code">
+    Add new tree-sitter grammars in dependencies and register in `syntax.rs`
+  </Card>
+  
+  <Card title="Themes" icon="palette">
+    Add new built-in themes in `theme.rs` or load custom Lua themes
+  </Card>
+  
+  <Card title="Commands" icon="terminal">
+    Register new commands in the command palette system
+  </Card>
+  
+  <Card title="Icons" icon="image">
+    Add file type icons by extending the icon mapping in `icons.rs`
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Building Rode" icon="hammer" href="/development/building">
+    Learn how to compile Rode from source
+  </Card>
+  
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Guidelines for contributing to Rode
+  </Card>
+</CardGroup>

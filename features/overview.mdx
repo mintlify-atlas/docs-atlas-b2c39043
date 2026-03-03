@@ -1,0 +1,101 @@
+---
+title: Features Overview
+description: A comprehensive overview of Rode's text editor features
+---
+
+Rode is a blazingly fast text editor written in Rust, built on top of the Iced GUI framework. It provides a modern, lightweight editing experience with powerful features designed for developers.
+
+## Core Features
+
+Rode combines speed, simplicity, and powerful functionality:
+
+<CardGroup cols={2}>
+  <Card title="File Navigation" icon="folder-tree" href="/features/file-navigation">
+    Browse files with a tree view, fuzzy finder, and quick file picker
+  </Card>
+  <Card title="Advanced Editing" icon="code" href="/features/editing">
+    Syntax highlighting, multi-tab support, and customizable preferences
+  </Card>
+  <Card title="Vim Commands" icon="terminal" href="/features/vim-mode">
+    Execute familiar Vim-style commands for quick operations
+  </Card>
+  <Card title="Search & Replace" icon="magnifying-glass" href="/features/search-replace">
+    Find and replace text with case-sensitive matching and navigation
+  </Card>
+  <Card title="Command Palette" icon="command" href="/features/command-palette">
+    Access all editor commands through a searchable interface
+  </Card>
+  <Card title="Terminal Integration" icon="window-maximize" href="/features/terminal">
+    Launch your system terminal directly from the editor
+  </Card>
+</CardGroup>
+
+## Built with Performance in Mind
+
+Rode is designed from the ground up for speed:
+
+- **Native Performance**: Written in Rust for blazingly fast execution
+- **Efficient Rendering**: Powered by Iced GUI framework
+- **Lazy Loading**: File tree and directory contents load on-demand
+- **Smart Caching**: File previews and syntax highlighting are cached
+
+## Customization
+
+<AccordionGroup>
+  <Accordion title="Themes">
+    Rode supports multiple built-in themes including:
+    - Catppuccin Mocha
+    - Nord
+    - Dracula
+    - Gruvbox
+    - Custom themes via Lua configuration
+  </Accordion>
+
+  <Accordion title="Editor Preferences">
+    Customize your editing experience:
+    - Tab size (1-16 spaces)
+    - Spaces vs tabs
+    - Theme selection
+    - Configuration stored in `~/.config/rode/preferences.lua`
+  </Accordion>
+
+  <Accordion title="Keyboard Shortcuts">
+    Extensive keyboard shortcuts for productivity:
+    - File operations (`Cmd+O`, `Cmd+S`, `Cmd+W`)
+    - Navigation (`Cmd+P`, `Cmd+Shift+F`, `Cmd+T`)
+    - Editor features (`Cmd+F`, `Cmd+J`, `Cmd+Shift+P`)
+  </Accordion>
+</AccordionGroup>
+
+## WakaTime Integration
+
+<Note>
+  Rode includes built-in WakaTime support to track your coding activity automatically.
+</Note>
+
+Track your coding metrics with WakaTime:
+- Automatic heartbeat tracking every 2 minutes
+- File-level activity monitoring
+- Save event tracking
+- Configurable API key and endpoint
+
+## File Format Support
+
+Rode provides syntax highlighting for common file types through its VSCode-compatible highlighter:
+
+- **Programming Languages**: Rust, Python, JavaScript, TypeScript, Go, Java, C/C++, and more
+- **Web**: HTML, CSS, SCSS, JSON, XML
+- **Markup**: Markdown with live preview support
+- **Configuration**: YAML, TOML, INI
+- **Shell**: Bash, Zsh, Fish
+
+## Getting Started
+
+To start using Rode's features:
+
+1. **Open a folder**: Press `Cmd+O` or use the Command Palette
+2. **Navigate files**: Use the sidebar file tree or fuzzy finder (`Cmd+Shift+F`)
+3. **Start editing**: Click any file to open it in a new tab
+4. **Customize**: Press `Cmd+Shift+S` to access settings
+
+<Check>Ready to dive deeper? Explore each feature in detail using the links above.</Check>

@@ -1,0 +1,136 @@
+---
+title: Introduction
+description: A blazingly fast text editor written in Rust and built on top of egui
+---
+
+<img
+  className="block dark:hidden"
+  src="https://i.imgur.com/E0oNrjO.png"
+  alt="Rode logo"
+/>
+<img
+  className="hidden dark:block"
+  src="https://i.imgur.com/E0oNrjO.png"
+  alt="Rode logo"
+/>
+
+## What is Rode?
+
+Rode is a blazingly fast text/code editor written in **Rust** and built on top of [egui](https://docs.rs/egui/latest/egui/). It's designed to work out of the box with minimal configuration while providing powerful features for modern development workflows.
+
+Built with performance and simplicity in mind, Rode combines the speed of native Rust applications with an intuitive interface powered by the iced GUI framework.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card
+    title="Fuzzy finding"
+    icon="magnifying-glass"
+  >
+    Quickly navigate your codebase with fuzzy file finding using Neovim-style keybinds
+  </Card>
+  <Card
+    title="Custom themes"
+    icon="palette"
+  >
+    Built-in themes including Catppuccin Mocha, plus support for custom theme.lua configuration
+  </Card>
+  <Card
+    title="Vim motions"
+    icon="keyboard"
+  >
+    Navigate efficiently with Vim-style commands and keybindings
+  </Card>
+  <Card
+    title="Syntax highlighting"
+    icon="code"
+  >
+    Rich syntax highlighting powered by tree-sitter for Rust, JavaScript, TypeScript, Python, and more
+  </Card>
+  <Card
+    title="File tree navigation"
+    icon="folder-tree"
+  >
+    Browse and manage your project files with an integrated sidebar
+  </Card>
+  <Card
+    title="Terminal integration"
+    icon="terminal"
+  >
+    Access your system's default terminal directly from the editor
+  </Card>
+</CardGroup>
+
+## Editor architecture
+
+Rode is built with a modular architecture using Rust's powerful type system:
+
+```rust src/main.rs
+fn main() -> iced::Result {
+    let icon_data = include_bytes!("assets/icon.png");
+    let icon = window::icon::from_file_data(icon_data, None)
+        .expect("Failed to load icon.");
+
+    iced::application(app::App::new, app::App::update, app::App::view)
+        .title("Rode")
+        .subscription(|app| app.subscription())
+        .font(FIRA_CODE)
+        .default_font(iced::Font {
+            family: iced::font::Family::Name("Fira Code"),
+            ..iced::Font::DEFAULT
+        })
+        .window_size((1200.0, 800.0))
+        .run()
+}
+```
+
+The editor uses the Elm-inspired architecture from iced, with clear separation between:
+- **State management** - Tab and file handling in `app.rs`
+- **UI components** - Modular widgets in `ui/`
+- **Syntax highlighting** - Tree-sitter integration in `syntax.rs`
+- **Configuration** - Lua-based preferences in `config/`
+
+## Why Rode?
+
+<Note>
+Rode is designed for developers who want a **fast**, **lightweight** editor that works immediately without complex configuration.
+</Note>
+
+While there are many text editors available, Rode offers:
+
+- **Native performance** - Written in Rust for maximum speed and efficiency
+- **Zero-config startup** - Works out of the box with sensible defaults
+- **Modern features** - Command palette, fuzzy finding, and autocomplete built-in
+- **Extensible theming** - Customize appearance with Lua-based themes
+- **WakaTime integration** - Track your coding time automatically
+
+## Getting started
+
+<CardGroup cols={2}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Get Rode installed on your system
+  </Card>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Start editing files in minutes
+  </Card>
+</CardGroup>
+
+## Community and support
+
+Rode is open-source software licensed under the [GNU General Public License Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+- **Repository**: [github.com/kashsuks/rode](https://github.com/kashsuks/rode)
+- **Package**: [crates.io/crates/rode-editor](https://crates.io/crates/rode-editor)
+- **License**: GPL-3.0-only
+
+<Warning>
+GitHub commits and nightly builds are not guaranteed to be stable as they represent development logs. For stable usage, install from crates.io or use tagged releases.
+</Warning>

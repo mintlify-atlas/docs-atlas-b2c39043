@@ -1,0 +1,249 @@
+---
+title: Vim Mode
+description: Execute Vim-style commands for quick editor operations
+---
+
+Rode includes a Vim-inspired command mode that allows you to execute common editor operations using familiar colon commands.
+
+## Command Input Bar
+
+The command input bar appears at the bottom of the editor, similar to Vim's command line.
+
+### Opening Command Mode
+
+Press `:` to open the command input bar.
+
+<Frame>
+  <img src="/images/command-input.png" alt="Command input bar" />
+</Frame>
+
+### How It Works
+
+<CodeGroup>
+```rust src/command_input.rs (Line 1-45)
+/// Vim-style `:` command input bar
+/// Ported from rode's hotkey/command_input.rs, adapted for iced.
+
+pub struct CommandInput {
+    pub open: bool,
+    pub input: String,
+}
+
+impl CommandInput {
+    pub fn open(&mut self) {
+        self.open = true;
+        self.input.clear();
+    }
+
+    pub fn close(&mut self) {
+        self.open = false;
+    }
+
+    /// Process a vim-style command string and return the command name
+    pub fn process_command(&self) -> Option<String> {
+        let cmd = self.input.trim();
+        if cmd.is_empty() {
+            return None;
+        }
+
+        match cmd {
+            "w" | "write" => Some("Save File".to_string()),
+            "q" | "quit" => Some("Quit".to_string()),
+            "wq" => Some("Save and Quit".to_string()),
+            "e" | "edit" => Some("Open File".to_string()),
+            "new" => Some("New File".to_string()),
+            _ => None,
+        }
+    }
+}
+```
+</CodeGroup>
+
+## Supported Commands
+
+Rode implements the most commonly used Vim commands:
+
+<AccordionGroup>
+  <Accordion title=":w - Write (Save)">
+    Saves the current file to disk.
+    
+    **Aliases**: `:w`, `:write`
+    
+    **Equivalent**: `Cmd+S`
+  </Accordion>
+
+  <Accordion title=":q - Quit">
+    Closes the current tab.
+    
+    **Aliases**: `:q`, `:quit`
+    
+    **Equivalent**: `Cmd+W`
+  </Accordion>
+
+  <Accordion title=":wq - Write and Quit">
+    Saves the current file and closes the tab.
+    
+    **Alias**: `:wq`
+    
+    **Equivalent**: `Cmd+S` followed by `Cmd+W`
+  </Accordion>
+
+  <Accordion title=":e - Edit">
+    Opens the file picker dialog.
+    
+    **Aliases**: `:e`, `:edit`
+    
+    **Equivalent**: `Cmd+O`
+  </Accordion>
+
+  <Accordion title=":new - New File">
+    Creates a new empty file in a new tab.
+    
+    **Alias**: `:new`
+    
+    **Equivalent**: `Cmd+N`
+  </Accordion>
+</AccordionGroup>
+
+## Command Workflow
+
+<Steps>
+  <Step title="Activate Command Mode">
+    Press `:` to open the command input bar at the bottom of the editor.
+  </Step>
+  
+  <Step title="Type Command">
+    Enter your Vim command (e.g., `w`, `q`, `wq`).
+  </Step>
+  
+  <Step title="Execute">
+    Press `Enter` to execute the command.
+  </Step>
+  
+  <Step title="Cancel">
+    Press `Escape` to close the command bar without executing.
+  </Step>
+</Steps>
+
+## Command Processing
+
+When you submit a command, Rode:
+
+1. **Trims whitespace** from your input
+2. **Matches against known commands** (both short form and long form)
+3. **Translates to internal command** (e.g., "Save File")
+4. **Executes the command** through the command palette system
+5. **Closes the command bar** automatically
+
+<CodeGroup>
+```rust src/app.rs (Line 810-829)
+Message::ToggleCommandInput => {
+    if self.command_input.open {
+        self.command_input.close();
+    } else {
+        self.command_input.open();
+        return iced::widget::operation::focus(self.command_input_id.clone());
+    }
+    iced::Task::none()
+}
+Message::CommandInputChanged(input) => {
+    self.command_input.input = input;
+    iced::Task::none()
+}
+Message::CommandInputSubmit => {
+    if let Some(cmd) = self.command_input.process_command() {
+        self.command_input.close();
+        return self.execute_palette_command(&cmd);
+    }
+    self.command_input.close();
+    iced::Task::none()
+}
+```
+</CodeGroup>
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `:` | Open command input bar |
+| `Enter` | Execute command |
+| `Escape` | Cancel and close |
+
+<Note>
+  The `:` key automatically opens the command bar and is ready for input. You don't need to type the colon manually.
+</Note>
+
+## Differences from Vim
+
+Rode's Vim mode is inspired by Vim but is not a complete implementation:
+
+<CardGroup cols={2}>
+  <Card title="What's Included" icon="check">
+    - Colon command syntax
+    - Common file operations (`:w`, `:q`, `:wq`)
+    - Command aliases
+    - Command bar UI
+  </Card>
+  
+  <Card title="What's Not Included" icon="xmark">
+    - Modal editing (Normal/Insert/Visual modes)
+    - Movement commands (hjkl, w, b, etc.)
+    - Text objects and motions
+    - Macros and registers
+  </Card>
+</CardGroup>
+
+<Warning>
+  Rode focuses on providing familiar Vim commands for file operations, not full Vim emulation. For complete Vim functionality, consider using Neovim or Vim directly.
+</Warning>
+
+## Command Extensions
+
+The command system is designed to be extensible. Commands are processed through the same system that powers the Command Palette, meaning:
+
+- Commands trigger the same actions as menu items
+- New commands can be added by extending the `process_command` function
+- All command palette features are accessible via Vim commands
+
+<Tip>
+  Want to see more Vim commands? The command processing function in `src/command_input.rs:29-43` shows exactly where to add new command mappings.
+</Tip>
+
+## Integration with Command Palette
+
+Vim commands and the Command Palette work together seamlessly:
+
+```rust
+Vim Command (:w) → Translates to → "Save File" → Execute via → Command Palette System
+```
+
+This architecture means:
+
+- Consistency between command interfaces
+- Easy addition of new commands
+- Shared command execution logic
+- Unified keyboard shortcut handling
+
+## Future Enhancements
+
+Planned improvements to Vim mode:
+
+<Steps>
+  <Step title="Additional Commands">
+    - `:sp` / `:split` for split views
+    - `:set` for runtime configuration
+    - `:help` for command reference
+  </Step>
+  
+  <Step title="Command Arguments">
+    Support for commands with arguments like `:e filename` or `:w filepath`
+  </Step>
+  
+  <Step title="Command History">
+    Arrow keys to navigate through previously executed commands
+  </Step>
+</Steps>
+
+<Check>
+  The Vim command mode provides a familiar interface for developers transitioning from Vim or looking for quick keyboard-driven operations.
+</Check>

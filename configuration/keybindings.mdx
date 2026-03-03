@@ -1,0 +1,406 @@
+---
+title: 'Keybindings'
+description: 'Keyboard shortcuts for efficient text editing'
+icon: 'keyboard'
+---
+
+## Overview
+
+Rode provides a comprehensive set of keyboard shortcuts for common editor operations. All keybindings are currently hardcoded in the application and use platform-aware modifiers (Cmd on macOS, Ctrl on Linux/Windows).
+
+<Note>
+  Custom keybindings are not yet supported. The shortcuts listed below are the default (and only) keybindings available in the current version.
+</Note>
+
+## Modifier Keys
+
+Rode uses platform-aware modifier keys:
+
+- **Command** (Cmd ⌘) on macOS
+- **Control** (Ctrl) on Linux and Windows
+
+In this documentation, we use `Cmd` to represent the platform-specific command modifier.
+
+**Source:** `src/app.rs:1023` (`modifiers.command()`)
+
+## File Operations
+
+<ParamField path="Cmd+O" type="keybinding">
+  **Open Folder**
+  
+  Opens a folder dialog to select a workspace directory.
+  
+  ```rust
+  "o" => return Some(Message::OpenFolderDialog),
+  ```
+  
+  **Source:** `src/app.rs:1040`
+</ParamField>
+
+<ParamField path="Cmd+S" type="keybinding">
+  **Save File**
+  
+  Saves the currently active file to disk.
+  
+  ```rust
+  "s" => return Some(Message::SaveFile),
+  ```
+  
+  **Source:** `src/app.rs:1042`
+</ParamField>
+
+<ParamField path="Cmd+N" type="keybinding">
+  **New File**
+  
+  Creates a new untitled file in a new tab.
+  
+  ```rust
+  "n" => return Some(Message::NewFile),
+  ```
+  
+  **Source:** `src/app.rs:1046`
+</ParamField>
+
+<ParamField path="Cmd+W" type="keybinding">
+  **Close Tab**
+  
+  Closes the currently active tab.
+  
+  ```rust
+  "w" => return Some(Message::CloseActiveTab),
+  ```
+  
+  **Source:** `src/app.rs:1041`
+</ParamField>
+
+## Navigation & UI
+
+<ParamField path="Cmd+B" type="keybinding">
+  **Toggle Sidebar**
+  
+  Shows or hides the file tree sidebar.
+  
+  ```rust
+  "b" => return Some(Message::ToggleSidebar),
+  ```
+  
+  **Source:** `src/app.rs:1038`
+</ParamField>
+
+<ParamField path="Cmd+R" type="keybinding">
+  **Toggle Sidebar** (alternate)
+  
+  Alternative keybinding for toggling the sidebar.
+  
+  ```rust
+  "r" => return Some(Message::ToggleSidebar),
+  ```
+  
+  **Source:** `src/app.rs:1039`
+</ParamField>
+
+<ParamField path="Cmd+T" type="keybinding">
+  **File Finder**
+  
+  Opens the fuzzy file finder for quick file navigation.
+  
+  ```rust
+  "t" => return Some(Message::ToggleFileFinder),
+  ```
+  
+  **Source:** `src/app.rs:1043`
+</ParamField>
+
+<ParamField path="Cmd+J" type="keybinding">
+  **Toggle Terminal**
+  
+  Shows or hides the integrated terminal panel.
+  
+  ```rust
+  "j" => return Some(Message::ToggleTerminal),
+  ```
+  
+  **Source:** `src/app.rs:1044`
+</ParamField>
+
+## Search & Replace
+
+<ParamField path="Cmd+F" type="keybinding">
+  **Find & Replace**
+  
+  Opens the find and replace panel.
+  
+  ```rust
+  "f" => return Some(Message::ToggleFindReplace),
+  ```
+  
+  **Source:** `src/app.rs:1045`
+</ParamField>
+
+## Command Palette & Tools
+
+<ParamField path="Cmd+Shift+P" type="keybinding">
+  **Command Palette**
+  
+  Opens the command palette for quick access to editor commands.
+  
+  ```rust
+  "p" | "P" => return Some(Message::ToggleCommandPalette),
+  ```
+  
+  **Source:** `src/app.rs:1032`
+</ParamField>
+
+<ParamField path="Cmd+Shift+F" type="keybinding">
+  **Fuzzy Finder**
+  
+  Opens the fuzzy finder for searching across files.
+  
+  ```rust
+  "f" | "F" => return Some(Message::ToggleFuzzyFinder),
+  ```
+  
+  **Source:** `src/app.rs:1031`
+</ParamField>
+
+<ParamField path="Cmd+Shift+S" type="keybinding">
+  **Settings**
+  
+  Opens the settings panel.
+  
+  ```rust
+  "s" | "S" => return Some(Message::ToggleSettings),
+  ```
+  
+  **Source:** `src/app.rs:1033`
+</ParamField>
+
+<ParamField path="Cmd+Shift+V" type="keybinding">
+  **Preview Markdown**
+  
+  Renders the current Markdown file in preview mode.
+  
+  ```rust
+  "v" | "V" => return Some(Message::PreviewMarkdown),
+  ```
+  
+  **Source:** `src/app.rs:1030`
+</ParamField>
+
+## Window Management
+
+<ParamField path="Cmd+Ctrl+F" type="keybinding">
+  **Toggle Fullscreen**
+  
+  Toggles fullscreen mode for the editor window.
+  
+  ```rust
+  "f" => return Some(Message::ToggleFullscreen(window::Mode::Fullscreen)),
+  ```
+  
+  **Source:** `src/app.rs:1025`
+  
+  <Note>
+    This requires both Command and Control modifiers to be pressed simultaneously.
+  </Note>
+</ParamField>
+
+## Universal Keys
+
+<ParamField path="Escape" type="keybinding">
+  **Close Overlays**
+  
+  Closes any open overlay panels (find, command palette, fuzzy finder, etc.).
+  
+  ```rust
+  Key::Named(iced::keyboard::key::Named::Escape) =>
+      Some(Message::EscapePressed),
+  ```
+  
+  **Source:** `src/app.rs:1005-1006`
+</ParamField>
+
+<ParamField path="Arrow Up" type="keybinding">
+  **Navigate Up**
+  
+  Navigates up in fuzzy finder, command palette, and other list views.
+  
+  ```rust
+  Key::Named(iced::keyboard::key::Named::ArrowUp) => {
+      Some(Message::FuzzyFinderNavigate(-1))
+  }
+  ```
+  
+  **Source:** `src/app.rs:1007-1009`
+</ParamField>
+
+<ParamField path="Arrow Down" type="keybinding">
+  **Navigate Down**
+  
+  Navigates down in fuzzy finder, command palette, and other list views.
+  
+  ```rust
+  Key::Named(iced::keyboard::key::Named::ArrowDown) => {
+      Some(Message::FuzzyFinderNavigate(1))
+  }
+  ```
+  
+  **Source:** `src/app.rs:1010-1012`
+</ParamField>
+
+<ParamField path="Enter" type="keybinding">
+  **Select Item**
+  
+  Selects the currently highlighted item in fuzzy finder or command palette.
+  
+  ```rust
+  Key::Named(iced::keyboard::key::Named::Enter) =>
+      Some(Message::FuzzyFinderSelect),
+  ```
+  
+  **Source:** `src/app.rs:1013-1014`
+</ParamField>
+
+## Text Editing
+
+<Note>
+  Standard text editing shortcuts (cut, copy, paste, undo, redo, select all) are handled by the underlying text editor component and may vary by platform.
+</Note>
+
+## Keybinding Implementation
+
+Keybindings are implemented in the `subscription` method of the `App` struct, which listens for keyboard events:
+
+<Accordion title="Full Keybinding Handler">
+```rust
+Event::Keyboard(iced::keyboard::Event::KeyPressed {
+    key,
+    modifiers,
+    ..
+}) => {
+    let navigation_msg = match &key {
+        Key::Named(iced::keyboard::key::Named::Escape) =>
+            Some(Message::EscapePressed),
+        Key::Named(iced::keyboard::key::Named::ArrowUp) => {
+            Some(Message::FuzzyFinderNavigate(-1))
+        }
+        Key::Named(iced::keyboard::key::Named::ArrowDown) => {
+            Some(Message::FuzzyFinderNavigate(1))
+        }
+        Key::Named(iced::keyboard::key::Named::Enter) =>
+            Some(Message::FuzzyFinderSelect),
+        _ => None,
+    };
+
+    if navigation_msg.is_some() {
+        return navigation_msg;
+    }
+
+    if let Key::Character(c) = &key {
+        if modifiers.command() && modifiers.control() {
+            match c.as_str() {
+                "f" => return Some(Message::ToggleFullscreen(window::Mode::Fullscreen)),
+                _ => {}
+            }
+        } else if modifiers.command() && modifiers.shift() {
+            match c.as_str() {
+                "v" | "V" => return Some(Message::PreviewMarkdown),
+                "f" | "F" => return Some(Message::ToggleFuzzyFinder),
+                "p" | "P" => return Some(Message::ToggleCommandPalette),
+                "s" | "S" => return Some(Message::ToggleSettings),
+                _ => {}
+            }
+        } else if modifiers.command() {
+            match c.as_str() {
+                "b" => return Some(Message::ToggleSidebar),
+                "r" => return Some(Message::ToggleSidebar),
+                "o" => return Some(Message::OpenFolderDialog),
+                "w" => return Some(Message::CloseActiveTab),
+                "s" => return Some(Message::SaveFile),
+                "t" => return Some(Message::ToggleFileFinder),
+                "j" => return Some(Message::ToggleTerminal),
+                "f" => return Some(Message::ToggleFindReplace),
+                "n" => return Some(Message::NewFile),
+                _ => {}
+            }
+        }
+    }
+    None
+}
+```
+
+**Source:** `src/app.rs:999-1052`
+</Accordion>
+
+## Quick Reference
+
+<AccordionGroup>
+  <Accordion title="File Management">
+    | Shortcut | Action |
+    |----------|--------|
+    | `Cmd+N` | New File |
+    | `Cmd+O` | Open Folder |
+    | `Cmd+S` | Save File |
+    | `Cmd+W` | Close Tab |
+  </Accordion>
+  
+  <Accordion title="Navigation">
+    | Shortcut | Action |
+    |----------|--------|
+    | `Cmd+B` | Toggle Sidebar |
+    | `Cmd+R` | Toggle Sidebar |
+    | `Cmd+T` | File Finder |
+    | `Cmd+J` | Toggle Terminal |
+    | `↑` / `↓` | Navigate Lists |
+    | `Enter` | Select Item |
+    | `Escape` | Close Overlays |
+  </Accordion>
+  
+  <Accordion title="Search & Tools">
+    | Shortcut | Action |
+    |----------|--------|
+    | `Cmd+F` | Find & Replace |
+    | `Cmd+Shift+F` | Fuzzy Finder |
+    | `Cmd+Shift+P` | Command Palette |
+    | `Cmd+Shift+S` | Settings |
+  </Accordion>
+  
+  <Accordion title="View & Preview">
+    | Shortcut | Action |
+    |----------|--------|
+    | `Cmd+Shift+V` | Preview Markdown |
+    | `Cmd+Ctrl+F` | Toggle Fullscreen |
+  </Accordion>
+</AccordionGroup>
+
+## Platform Differences
+
+The `command()` modifier automatically maps to the correct key on each platform:
+
+- **macOS**: Command (⌘) key
+- **Linux**: Control (Ctrl) key  
+- **Windows**: Control (Ctrl) key
+
+This ensures keybindings feel native to each platform without requiring separate configuration.
+
+## Future Support
+
+<Warning>
+  Custom keybindings are not currently supported. Future versions may add:
+  - User-configurable keybindings
+  - Keybinding configuration file (e.g., `~/.config/rode/keybindings.lua`)
+  - Vim mode keybindings
+  - Emacs mode keybindings
+</Warning>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Preferences" icon="sliders" href="/configuration/preferences">
+    Configure tab size, indentation, and theme
+  </Card>
+  
+  <Card title="Themes" icon="palette" href="/configuration/themes">
+    Customize editor colors and syntax highlighting
+  </Card>
+</CardGroup>

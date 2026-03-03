@@ -1,0 +1,217 @@
+---
+title: Installation
+description: Install Rode on your platform
+---
+
+Rode is shipped across multiple platforms, primarily through GitHub Releases and [crates.io](https://crates.io/crates/rode-editor). This guide covers installation methods for different platforms.
+
+<Note>
+Nightly builds are an ongoing process and planned for the near future. Currently, stable releases are available through crates.io and GitHub releases.
+</Note>
+
+## Prerequisites
+
+Before installing Rode, ensure you have:
+
+- **Rust toolchain** - Required for building from source
+- **Cargo package manager** - Comes with Rust installation
+- **Git** - For cloning the repository (if building from source)
+
+<Tip>
+If you don't have Rust installed, visit [rustup.rs](https://rustup.rs/) to install the official Rust toolchain.
+</Tip>
+
+## Install from crates.io
+
+The easiest way to install Rode is through Cargo:
+
+```bash
+cargo install rode-editor
+```
+
+This will download, compile, and install the latest stable version of Rode. The binary will be available in your Cargo bin directory (usually `~/.cargo/bin/`).
+
+After installation, run Rode:
+
+```bash
+rode-editor
+```
+
+## Install from GitHub releases
+
+Pre-built binaries are available for different platforms on the [GitHub releases page](https://github.com/kashsuks/rode/releases).
+
+### macOS installation
+
+<Steps>
+  <Step title="Download the binary">
+    For Mac Silicon (M1, M2, M3 chips), download `rode-editor-apple-silicon` from the latest release.
+  </Step>
+  
+  <Step title="Make it executable">
+    Open your terminal and navigate to the download location, then run:
+    
+    ```bash
+    chmod +x rode-editor-apple-silicon
+    ```
+  </Step>
+  
+  <Step title="Run the editor">
+    Execute the binary:
+    
+    ```bash
+    ./rode-editor-apple-silicon
+    ```
+  </Step>
+  
+  <Step title="Handle security permissions">
+    If macOS displays a security warning:
+    
+    1. Go to **System Settings**
+    2. Navigate to **Privacy & Security**
+    3. Scroll to the **Security** section
+    4. Click **Open Anyway** next to the Rode warning
+    5. Confirm to allow the application
+  </Step>
+</Steps>
+
+<Info>
+You can move the binary to `/usr/local/bin/` to make it accessible from anywhere:
+
+```bash
+sudo mv rode-editor-apple-silicon /usr/local/bin/rode
+```
+</Info>
+
+### Linux installation
+
+Download the appropriate binary for your architecture from GitHub releases:
+
+```bash
+# Download the binary (replace URL with latest release)
+wget https://github.com/kashsuks/rode/releases/download/v0.4.1/rode-editor-linux
+
+# Make executable
+chmod +x rode-editor-linux
+
+# Move to PATH (optional)
+sudo mv rode-editor-linux /usr/local/bin/rode
+```
+
+## Build from source
+
+Building from source gives you the latest features and allows you to customize the build.
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/kashsuks/rode
+    ```
+  </Step>
+  
+  <Step title="Navigate to the directory">
+    ```bash
+    cd rode
+    ```
+  </Step>
+  
+  <Step title="Build and run">
+    ```bash
+    cargo run
+    ```
+    
+    This will install all required dependencies and compile the application.
+  </Step>
+  
+  <Step title="Install the binary (optional)">
+    To install the compiled binary to your Cargo bin:
+    
+    ```bash
+    cargo install --path .
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+GitHub commits are **not guaranteed to be stable** as they represent development logs. The current commit may not compile or run correctly. For stable builds:
+
+- Use tagged releases (e.g., `git checkout v0.4.1`)
+- Install from crates.io
+- Download pre-built binaries from releases
+</Warning>
+
+## Verify installation
+
+After installation, verify Rode is working:
+
+```bash
+rode-editor --version
+```
+
+Or simply launch the editor:
+
+```bash
+rode-editor
+```
+
+You should see the Rode welcome screen with options to open a folder or file.
+
+## Dependencies
+
+Rode uses the following core dependencies (automatically installed during build):
+
+<CodeGroup>
+
+```toml Cargo.toml
+[dependencies]
+eframe = "0.29"
+egui = "0.29"
+iced = { version = "0.14.0", features = ["svg", "image", "advanced", "markdown", "tokio"] }
+syntect = { version = "5", default-features = false, features = ["default-syntaxes", "regex-onig"] }
+
+# Tree-sitter for syntax highlighting
+tree-sitter-highlight = "0.25"
+tree-sitter-rust = "0.24"
+tree-sitter-javascript = "0.23"
+tree-sitter-typescript = "0.23"
+tree-sitter-python = "0.23"
+
+# Additional utilities
+fuzzy-matcher = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+```
+
+</CodeGroup>
+
+## Configuration directory
+
+On first launch, Rode creates a configuration directory:
+
+- **macOS**: `~/Library/Application Support/rode/`
+- **Linux**: `~/.config/rode/`
+- **Windows**: `%APPDATA%\rode\`
+
+This directory contains:
+- `preferences.lua` - Editor preferences
+- `theme.lua` - Custom theme configuration
+- `wakatime.json` - WakaTime integration settings
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart guide"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Learn the basics and start editing
+  </Card>
+  <Card
+    title="Keyboard shortcuts"
+    icon="keyboard"
+    href="/configuration/keybindings"
+  >
+    Master Rode's keybindings
+  </Card>
+</CardGroup>
