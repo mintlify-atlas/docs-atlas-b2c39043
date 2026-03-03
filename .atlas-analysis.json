@@ -1,0 +1,81 @@
+{
+  "projectType": "general",
+  "projectName": "Rode",
+  "projectDescription": "A blazingly fast text editor written in Rust built on top of egui and iced frameworks",
+  "theme": "aspen",
+  "primaryColor": "#cba6f7",
+  "lightColor": "#89b4fa",
+  "darkColor": "#585b70",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Features",
+        "pages": [
+          "features/overview",
+          "features/file-navigation",
+          "features/editing",
+          "features/vim-mode",
+          "features/search-replace",
+          "features/command-palette",
+          "features/terminal"
+        ]
+      },
+      {
+        "group": "Configuration",
+        "pages": [
+          "configuration/preferences",
+          "configuration/themes",
+          "configuration/keybindings"
+        ]
+      },
+      {
+        "group": "Integrations",
+        "pages": [
+          "integrations/wakatime"
+        ]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "development/architecture",
+          "development/building",
+          "development/contributing"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Syntax highlighting with tree-sitter support for Rust, JavaScript, TypeScript, and Python",
+    "Vim motions and vim-style command input for efficient text editing",
+    "Fuzzy file finder for quick navigation",
+    "VS Code-style command palette for easy access to commands",
+    "Custom theming system with Lua-based configuration",
+    "File tree navigation with collapsible sidebar",
+    "Find and replace functionality with regex support",
+    "Terminal integration for running shell commands",
+    "Tab-based file management",
+    "Intelligent autocomplete engine",
+    "WakaTime integration for time tracking",
+    "Auto-update functionality"
+  ],
+  "publicApiSurface": [
+    "EditorPreferences - Tab size, spaces/tabs, theme selection",
+    "ThemeColors - Custom color scheme configuration",
+    "Command Palette - Theme, Settings, Open File, Open Folder, Save File, New File, Save As, Toggle Terminal, Find and Replace",
+    "Vim Commands - :w (save), :q (quit), :wq (save and quit)",
+    "Keyboard Shortcuts - Cmd+T (file finder), Cmd+Shift+F (fuzzy finder), Cmd+Shift+P (command palette), Cmd+F (find/replace), Cmd+J (terminal)",
+    "File Tree - Open folder, navigate files, refresh",
+    "Fuzzy Finder - Quick file search and preview",
+    "Find and Replace - Search with case sensitivity, replace one or all",
+    "Autocomplete Engine - Context-aware code completion",
+    "WakaTime Config - API key and URL settings"
+  ]
+}
